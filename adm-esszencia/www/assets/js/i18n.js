@@ -43,7 +43,7 @@ window.ESSZ_I18N = {
     "@visit": ["Visits", "Besuch", "Besök"],
     "egyeztetéssel": ["by appointment", "nach Vereinbarung", "efter bokning"],
     "Nyelv": ["Languages", "Sprachen", "Språk"],
-    "magyar · svenska": ["Hungarian · Swedish", "Ungarisch · Schwedisch", "ungerska · svenska"],
+    "magyar · svéd · kis angol": ["Hungarian · Swedish · some English", "Ungarisch · Schwedisch · etwas Englisch", "ungerska · svenska · lite engelska"],
     "Esszencia logó – kattints egy kis szirom-esőért": ["Esszencia logo – click for a little shower of petals", "Esszencia-Logo – klicken Sie für einen kleinen Blütenregen", "Esszencia-logotyp – klicka för ett litet regn av kronblad"],
 
     /* ---- 01 about ---- */
@@ -255,7 +255,7 @@ window.ESSZ_I18N = {
     "Sénye csendes utcájában, egy kertes házban vár a műhely.": ["The studio awaits you in a house with a garden on a quiet street in Sénye.", "Das Studio befindet sich in einem Haus mit Garten in einer ruhigen Straße in Sénye.", "Studion ligger i ett hus med trädgård på en lugn gata i Sénye."],
     "Google Térkép": ["Google Maps", "Google Maps", "Google Maps"],
     "Apple Térkép": ["Apple Maps", "Apple Karten", "Apple Kartor"],
-    "Svéd nyelven is szívesen fogadlak.": ["I'm happy to welcome you in Swedish too.", "Gerne empfange ich Sie auch auf Schwedisch.", "Jag tar gärna emot dig på svenska."],
+    "Svéd nyelven is szívesen fogadlak, és egy kicsit angolul is beszélek.": ["I'm happy to welcome you in Swedish too – and I speak a little English.", "Gerne empfange ich Sie auch auf Schwedisch – und ein wenig Englisch spreche ich auch.", "Jag tar gärna emot dig på svenska – och jag pratar lite engelska också."],
 
     /* ---- booking sheet & e-mail ---- */
     "Időpontkérés": ["Booking request", "Terminanfrage", "Tidsbokning"],
