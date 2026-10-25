@@ -45,8 +45,9 @@ to `[English, Deutsch, Svenska]`. If you change a Hungarian sentence in `index.h
 update its key in `i18n.js` too; otherwise that sentence simply stays Hungarian in the
 other languages.
 
-**Language choice.** The site uses, in order: a `?lang=de` link → the visitor's last
-choice → their browser language → Hungarian.
+**Language choice.** The site opens in Hungarian. Visitors can switch with the
+HU · EN · DE · SE buttons (their choice is remembered), and `?lang=de` links open a
+specific language.
 
 After editing, bump `version` in `adm-esszencia/umbrel-app.yml`, push, and update the
 app from the Umbrel App Store.
