@@ -9,7 +9,7 @@
   var S = null;            // server state
   var tab = 'requests';
   var DAYS = ['vasárnap', 'hétfő', 'kedd', 'szerda', 'csütörtök', 'péntek', 'szombat'];
-  var DUR = [30, 45, 60, 75, 90, 120, 180];
+  var DUR = [30, 45, 60, 75, 90, 120, 180, 240];
   var LANG = { hu: 'magyar', en: 'angol', de: 'német', sv: 'svéd' };
 
   /* ---------------- helpers ---------------- */
@@ -410,7 +410,9 @@
     var input = $('input[name=time]', container);
     if (!date) { box.innerHTML = '<span class="times-empty">Előbb válassz napot.</span>'; return; }
     box.innerHTML = '<span class="times-empty">Betöltés…</span>';
+    var token = box.__req = (box.__req || 0) + 1; // ignore answers for an earlier date
     api('/api/admin/slots?date=' + date + '&minutes=' + getMinutes() + (exclude ? '&exclude=' + exclude : '')).then(function (d) {
+      if (token !== box.__req) return;
       var hours = S.settings.hours[dateObj(date).getUTCDay()];
       if (!d.times.length) {
         box.innerHTML = '<span class="times-empty">' + (hours ? 'Ezen a napon nincs szabad hely ekkora időre.' : 'Ezen a napon zárva vagy.') + ' Pontos időt alább kézzel is megadhatsz.</span>';
@@ -423,6 +425,8 @@
           $$('button', box).forEach(function (x) { x.setAttribute('aria-pressed', String(x === btn)); });
         });
       });
+    }).catch(function () {
+      if (token === box.__req) box.innerHTML = '<span class="times-empty">Nem sikerült betölteni a szabad időket. Az időpontot alább kézzel is megadhatod.</span>';
     });
   }
 

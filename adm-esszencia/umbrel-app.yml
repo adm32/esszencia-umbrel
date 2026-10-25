@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.3.0"
+version: "1.3.1"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -35,10 +35,9 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  Online időpontfoglalás: lépésről lépésre kezelés, nap és időpont választás, a vendég csak a visszaigazolás után kap e-mailt.
-  A nyitvatartás az oldalon automatikusan a Foglalások app beállításaiból frissül.
-  Anonim, sütik nélküli látogatottsági statisztika a Foglalások app Statisztika nézetéhez.
-  Az új funkciókhoz az „Esszencia Foglalások” app is szükséges; nélküle a foglalás gomb telefonos/e-mailes elérhetőséget mutat.
+  Hibajavítások az online foglalásnál:
+  ha valaki közben lefoglalta a kiválasztott időpontot, az erről szóló üzenet most már látható marad;
+  nyelvváltáskor nem vesznek el a már beírt adatok; az /api útvonal mindig a foglalási apphoz kerül.
 dependencies: []
 path: ""
 defaultUsername: ""

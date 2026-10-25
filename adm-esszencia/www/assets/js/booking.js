@@ -237,7 +237,7 @@
     if (!st.month) st.month = monthOf(today || iso(Date.now()));
     var key = st.month + "|" + minutes();
     var days = cache[key];
-    var h = summaryChip() + '<h3 class="bk-q">' + esc(tx("q2")) + "</h3>";
+    var h = summaryChip() + (st.notice ? '<p class="bk-alert" role="alert">' + esc(tx(st.notice)) + "</p>" : "") + '<h3 class="bk-q">' + esc(tx("q2")) + "</h3>";
     if (!days) {
       body.innerHTML = h + '<p class="bk-loading" role="status"><span class="bk-spinner" aria-hidden="true"></span>' + esc(tx("loading")) + "</p>";
       setNext(tx("next2"), false);
@@ -392,11 +392,8 @@
         return;
       }
       if (r.status === 409) {
-        cache = {}; st.time = null; st.step = 2; st.error = "";
-        render();
-        var note = document.createElement("p");
-        note.className = "bk-alert"; note.setAttribute("role", "alert"); note.textContent = tx("taken");
-        body.insertBefore(note, body.firstChild);
+        cache = {}; st.time = null; st.step = 2; st.error = ""; st.notice = "taken";
+        render(); body.scrollTop = 0;
         return;
       }
       if (r.status === 400 && r.data && r.data.fields) {
@@ -449,6 +446,7 @@
     if (t.hasAttribute("data-date")) { st.date = t.getAttribute("data-date"); st.time = null; renderStep2(); var sl = body.querySelector(".bk-slots"); if (sl && sl.scrollIntoView) sl.scrollIntoView({ block: "nearest", behavior: "smooth" }); return; }
     if (t.hasAttribute("data-time")) {
       st.time = t.getAttribute("data-time");
+      if (st.notice) { st.notice = ""; var al = body.querySelector(".bk-alert"); if (al) al.remove(); }
       body.querySelectorAll(".bk-time").forEach(function (x) { x.setAttribute("aria-pressed", String(x === t)); });
       next.disabled = false;
       if (window.matchMedia("(max-width: 760px)").matches) next.scrollIntoView({ block: "nearest" });
@@ -475,7 +473,7 @@
         .catch(function () { if (st.step === 1 && !st.done) { st.offline = true; render(); } });
     }
   };
-  E.hooks.push(function () { if (dlg.open) render(); renderHours(); });
+  E.hooks.push(function () { if (dlg.open) { readForm(); render(); } renderHours(); });
 
   /* ---------- opening hours on the page (from the server, so they stay in sync) ---------- */
   var hoursCache = null;

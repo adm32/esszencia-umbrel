@@ -163,11 +163,12 @@ const snapMinutes = (n) => { n = clampMinutes(n); for (const m of PUBLIC_MINUTES
 
 /* -------------------------------------------------------------- rate limit */
 const hits = new Map();
-function limited(ip, max, windowMs) {
+function limited(ip, max, windowMs, checkOnly) {
   const t = Date.now();
   const arr = (hits.get(ip) || []).filter((x) => t - x < windowMs);
-  if (arr.length >= max) { hits.set(ip, arr); return true; }
-  arr.push(t); hits.set(ip, arr);
+  hits.set(ip, arr);
+  if (arr.length >= max) return true;
+  if (!checkOnly) arr.push(t);
   return false;
 }
 setInterval(() => { const t = Date.now(); for (const [k, v] of hits) if (!v.some((x) => t - x < 3600000)) hits.delete(k); }, 600000).unref();
@@ -264,7 +265,8 @@ async function publicApi(req, res) {
 
     // Spam traps: hidden field must be empty, and a human needs a few seconds to fill the form.
     if (str(body.website, 200) || (+body.elapsed > 0 && +body.elapsed < 2500)) return send(res, 200, { ok: true, id: 'x' });
-    if (limited('ip:' + ip, 5, 3600000) || limited('all', 40, 3600000)) return send(res, 429, { error: 'rate' });
+    if (limited('ip:' + ip, 12, 3600000)) return send(res, 429, { error: 'rate' });
+    if (limited('ok:' + ip, 5, 3600000, true) || limited('all', 40, 3600000, true)) return send(res, 429, { error: 'rate' });
 
     const b = {
       id: crypto.randomBytes(6).toString('hex'),
@@ -296,6 +298,7 @@ async function publicApi(req, res) {
     if (offered(b.date, b.minutes).indexOf(b.time) < 0) return send(res, 409, { error: 'taken' });
     db.bookings.push(b);
     saveDb();
+    limited('ok:' + ip, 5, 3600000); limited('all', 40, 3600000); // count successful requests only
     send(res, 201, { ok: true, booking: publicBooking(b) });
     notifyAdmin(b);
     return;
@@ -350,7 +353,10 @@ function recordHit(req, body) {
     bump(rec.dev, w && w < 760 ? 'mobile' : w && w < 1100 ? 'tablet' : 'desktop');
     if (LANGS.indexOf(body.lang) >= 0) bump(rec.lang, body.lang);
     const host = oneLine(body.ref, 120);
-    if (!body.internal) bump(rec.ref, refSource(host));
+    if (!body.internal) {
+      const src = refSource(host);
+      bump(rec.ref, rec.ref[src] || Object.keys(rec.ref).length < 25 ? src : 'Egyéb');
+    }
   } else if (body.t === 'event' && EVENTS.indexOf(body.e) >= 0) {
     bump(rec.ev, body.e);
     if (body.e === 'lang' && LANGS.indexOf(body.lang) >= 0) bump(rec.lang, body.lang);
@@ -686,7 +692,9 @@ function isHttps(req) {
   return req.headers['x-forwarded-proto'] === 'https' || /"scheme":"https"/.test(String(req.headers['cf-visitor'] || ''));
 }
 function sessionCookie(req, value, maxAge) {
-  return COOKIE + '=' + value + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + maxAge + (isHttps(req) ? '; Secure' : '');
+  // Lax (not Strict): the session must survive opening the app from the link in a notification e-mail.
+  // Cross-site writes are still blocked by the X-Esszencia header check.
+  return COOKIE + '=' + value + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + maxAge + (isHttps(req) ? '; Secure' : '');
 }
 const loginFails = new Map();
 function tooManyFails(key, max, windowMs) {
