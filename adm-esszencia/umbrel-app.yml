@@ -2,7 +2,7 @@ manifestVersion: 1
 id: adm-esszencia
 name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
-icon: https://raw.githubusercontent.com/__GH_REPO__/main/assets/icon.svg
+icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
 version: "1.0.0"
 port: 4751
@@ -21,14 +21,14 @@ description: >-
 developer: adm
 website: https://www.facebook.com/profile.php?id=61572319876098
 submitter: adm
-submission: https://github.com/__GH_REPO__
-repo: https://github.com/__GH_REPO__
-support: https://github.com/__GH_REPO__/issues
+submission: https://github.com/adm32/esszencia-umbrel
+repo: https://github.com/adm32/esszencia-umbrel
+support: https://github.com/adm32/esszencia-umbrel/issues
 gallery:
-  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-1.jpg
-  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-2.jpg
-  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-3.jpg
-  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-4.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-1.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-2.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
   Első kiadás.
 dependencies: []

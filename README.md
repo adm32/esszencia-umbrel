@@ -10,7 +10,7 @@ and scripts are all local, so nothing is loaded from Google or any other third p
 ## Install on Umbrel
 
 1. Open **App Store** on your Umbrel → **⋯** (top right) → **Community App Stores**.
-2. Paste this repository's URL and click **Add**.
+2. Paste `https://github.com/adm32/esszencia-umbrel` and click **Add**.
 3. Open **adm's App Store** and install **Esszencia**.
 
 The site runs on port **4751** (`http://umbrel.local:4751`). It is a public website,
