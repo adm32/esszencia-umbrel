@@ -2,7 +2,7 @@
 
 The website of **Esszencia Szépségműhely · Beauty & Relax** (Sénye), packaged as an
 [Umbrel](https://umbrel.com) community app store. One static page in four languages
-(HU · EN · DE · SV), served by nginx, with no external dependencies: fonts, images
+(HU · EN · DE · SE), served by nginx, with no external dependencies: fonts, images
 and scripts are all local, so nothing is loaded from Google or any other third party.
 
 ![Palette](assets/palette.svg)

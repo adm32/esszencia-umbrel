@@ -47,9 +47,8 @@
   }
 
   // Elements whose text is produced by this script – the static translator leaves them alone.
-  var DYN = "[data-services-root],[data-season-no],[data-season-latin-cap],[data-season-name],[data-season-latin]," +
-            "[data-season-text],[data-season-label],[data-season-family],[data-season-fact],[data-season-img]," +
-            "[data-breathe-label],[data-breathe-btn],[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-no-i18n]";
+  var DYN = "[data-services-root],[data-season-name],[data-season-latin],[data-season-label],[data-season-fact],[data-season-img]," +
+            "[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-no-i18n]";
   var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, svg: 1, SVG: 1 };
   var textNodes = null, attrEls = null;
 
@@ -165,23 +164,6 @@
     });
   });
 
-  /* ---------- Reveal on scroll ---------- */
-  var reveals = $$(".reveal");
-  if (hasIO && !reduceMotion) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); } });
-    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
-    reveals.forEach(function (el) { io.observe(el); });
-  } else {
-    reveals.forEach(function (el) { el.classList.add("is-in"); });
-  }
-
-  /* ---------- Pause the drifting leaves when the hero is off-screen (saves battery) ---------- */
-  var leaves = $(".leaves");
-  if (leaves && hasIO) {
-    new IntersectionObserver(function (en) { leaves.classList.toggle("is-paused", !en[0].isIntersecting); }).observe(leaves);
-  }
-
   /* ---------- Active nav link ---------- */
   var links = $$(".nav-link");
   if (hasIO && links.length) {
@@ -227,109 +209,68 @@
     sheet.addEventListener("click", function (e) { if (e.target === sheet) closeDialog(sheet); });
   }
 
-  /* ---------- Services (from services.js) ---------- */
+  /* ---------- Treatments & prices (from services.js) – accordion ---------- */
   var root = $("[data-services-root]");
   var data = window.ESSZENCIA_SERVICES || { categories: [] };
   var cats = (data.categories || []).filter(function (c) { return c && c.items && c.items.length; });
-  var activeCat = 0;
+  var openCats = { 0: true };
 
   function dur(v) { return L(v).replace(/perc/g, T("perc")); }
   function price(v) { return T(L(v)); }
-
-  function treatment(it, i) {
-    var name = L(it.name);
-    return '<li class="treatment">' +
-      '<span class="treatment__n">' + pad(i + 1) + '</span>' +
-      '<div><h3 class="treatment__name">' + esc(name) + (it.tag ? '<span class="treatment__tag">' + esc(L(it.tag)) + '</span>' : '') + '</h3>' +
-      (it.desc ? '<p class="treatment__desc">' + esc(L(it.desc)) + '</p>' : '') + '</div>' +
-      '<div class="treatment__meta">' + (it.price ? '<span class="treatment__price">' + esc(price(it.price)) + '</span>' : '') +
-      (it.duration ? '<span class="treatment__dur">' + esc(dur(it.duration)) + '</span>' : '') + '</div>' +
-      '<button type="button" class="treatment__book" data-book data-service="' + esc(name) + '">' + esc(T("Ezt kérem")) + '</button>' +
-      '</li>';
+  function group(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function minPrice(items) {
+    var min = Infinity;
+    items.forEach(function (it) {
+      var m = /\d[\d\s]*/.exec(L(it.price) || "");
+      if (m) { var n = parseInt(m[0].replace(/\s/g, ""), 10); if (n && n < min) min = n; }
+    });
+    return min === Infinity ? null : min;
   }
-  function priceRow(it) {
-    return '<li class="price-row"><span class="price-row__name">' + esc(L(it.name)) +
+  function metaText(c) {
+    var n = c.items.length, p = minPrice(c.items);
+    var tpl = lang === "hu" ? (p ? "{n} kezelés · {p} Ft-tól" : "{n} kezelés") : T(p ? "acc:meta" : "acc:count");
+    return tpl.replace("{n}", n).replace("{p}", p ? group(p) : "");
+  }
+  function row(it) {
+    return '<li class="svc"><span class="svc__name">' + esc(L(it.name)) +
+      (it.tag ? '<span class="svc__tag">' + esc(L(it.tag)) + '</span>' : '') +
       (it.desc ? '<small>' + esc(L(it.desc)) + '</small>' : '') + '</span>' +
-      '<span class="price-row__price">' + esc(price(it.price || "")) + '</span></li>';
+      '<span class="svc__right">' + (it.price ? '<span class="svc__price">' + esc(price(it.price)) + '</span>' : '') +
+      (it.duration ? '<span class="svc__dur">' + esc(dur(it.duration)) + '</span>' : '') + '</span></li>';
   }
 
   function renderServices() {
     if (!root) return;
     if (!cats.length) {
-      root.innerHTML =
-        '<div class="coming-soon">' +
-          '<div class="coming-soon__art"><img src="assets/img/sprig-top.webp" width="700" height="290" alt="" loading="lazy"></div>' +
-          '<div class="coming-soon__body"><p class="label"><b>—</b> ' + esc(T("Hamarosan")) + '</p>' +
-          '<h3>' + esc(T("Az árlista éppen készül")) + '</h3>' +
-          '<p>' + esc(T("Frissítem a kezelések listáját. Addig is szívesen mesélek róluk telefonon vagy üzenetben – és segítek kiválasztani, melyik illik leginkább a bőrödhöz.")) + '</p>' +
-          '<div class="btn-row"><button class="btn" type="button" data-book>' + esc(T("Érdeklődöm")) + '</button>' +
-          '<a class="btn btn--line" href="tel:' + PHONE + '">+36 70 622 1208</a></div></div>' +
-        '</div>';
+      root.innerHTML = '<p>' + esc(T("Az árlista éppen készül")) + ' – <a href="tel:' + PHONE + '">+36 70 622 1208</a></p>';
       return;
     }
-    var multi = cats.length > 1;
-    var html = "";
-    if (multi) {
-      html += '<div class="cat-tabs" role="tablist" aria-label="' + esc(T("Kategóriák")) + '">';
-      cats.forEach(function (c, i) {
-        var on = i === activeCat;
-        html += '<button class="cat-tab" type="button" role="tab" id="tab-' + i + '" aria-controls="panel-' + i + '" aria-selected="' + on + '" tabindex="' + (on ? 0 : -1) + '">' + esc(L(c.name)) + '</button>';
-      });
-      html += '</div>';
-    }
+    var html = data.intro ? '<p class="services-intro">' + esc(L(data.intro)) + '</p>' : '';
     cats.forEach(function (c, i) {
       var name = L(c.name), intro = L(c.intro), note = L(c.note);
-      var list = c.compact
-        ? '<ul class="price-list" aria-label="' + esc(name) + '">' + c.items.map(priceRow).join("") + '</ul>'
-        : '<ul class="treatments" aria-label="' + esc(name) + '">' + c.items.map(treatment).join("") + '</ul>';
-      html += '<div class="cat-panel" id="panel-' + i + '"' + (multi ? ' role="tabpanel" tabindex="0" aria-labelledby="tab-' + i + '"' : '') + (i === activeCat ? '' : ' hidden') + '>' +
-        (multi ? '' : '<p class="label">' + esc(name) + '</p>') +
-        (intro ? (intro.length > 240
-          ? '<div class="cat-intro is-long"><p id="intro-' + i + '">' + esc(intro) + '</p><button type="button" class="more-btn" aria-expanded="false" aria-controls="intro-' + i + '">' + esc(T("Tovább olvasom")) + '</button></div>'
-          : '<p class="cat-intro">' + esc(intro) + '</p>') : '') +
-        list +
-        ((note || c.compact) ? '<div class="cat-foot">' + (note ? '<p class="cat-note">' + esc(note) + '</p>' : '<span></span>') +
-          (c.compact ? '<button class="btn btn--line" type="button" data-book data-service="' + esc(name) + '">' + esc(T("Időpontot kérek")) + '</button>' : '') + '</div>' : '') +
-        '</div>';
+      html += '<details class="acc" data-cat="' + i + '"' + (openCats[i] ? ' open' : '') + '>' +
+        '<summary><span class="acc__title">' + esc(name) + '</span><span class="acc__meta">' + esc(metaText(c)) + '</span>' +
+        '<span class="acc__chev" aria-hidden="true"><svg><use href="#i-chevron"/></svg></span></summary>' +
+        '<div class="acc__body">' +
+        (intro ? (intro.length > 220
+          ? '<div class="acc__intro is-long"><p id="intro-' + i + '">' + esc(intro) + '</p><button type="button" class="more-btn" aria-expanded="false" aria-controls="intro-' + i + '">' + esc(T("Tovább olvasom")) + '</button></div>'
+          : '<p class="acc__intro">' + esc(intro) + '</p>') : '') +
+        '<ul class="svc-list' + (c.compact ? ' svc-list--two' : '') + '">' + c.items.map(row).join("") + '</ul>' +
+        '<div class="acc__foot">' + (note ? '<p class="acc__note">' + esc(note) + '</p>' : '<span></span>') +
+        '<button class="btn btn--line" type="button" data-book data-service="' + esc(name) + '">' + esc(T("Időpontot kérek")) + '</button></div>' +
+        '</div></details>';
     });
     if (data.note) html += '<p class="services-note">' + esc(L(data.note)) + '</p>';
-    root.innerHTML = (data.intro ? '<p class="services-intro">' + esc(L(data.intro)) + '</p>' : '') + html;
+    root.innerHTML = html;
 
+    $$(".acc", root).forEach(function (d) {
+      d.addEventListener("toggle", function () { openCats[d.getAttribute("data-cat")] = d.open; });
+    });
     $$(".more-btn", root).forEach(function (b) {
       b.addEventListener("click", function () {
         var open = b.parentNode.classList.toggle("is-open");
         b.setAttribute("aria-expanded", String(open));
         b.textContent = T(open ? "Kevesebb" : "Tovább olvasom");
-      });
-    });
-
-    var tabs = $$(".cat-tab", root);
-    var select = function (i, focus) {
-      activeCat = i;
-      tabs.forEach(function (t, j) {
-        var on = i === j;
-        t.setAttribute("aria-selected", String(on));
-        t.tabIndex = on ? 0 : -1;
-        $("#panel-" + j, root).hidden = !on;
-      });
-      if (focus) tabs[i].focus();
-    };
-    tabs.forEach(function (t, i) {
-      t.addEventListener("click", function () {
-        select(i);
-        // keep the chosen tab visible in the horizontally scrolling tab bar (phones)
-        var bar = t.parentNode;
-        if (bar.scrollWidth > bar.clientWidth) {
-          bar.scrollTo({ left: t.offsetLeft - (bar.clientWidth - t.offsetWidth) / 2, behavior: reduceMotion ? "auto" : "smooth" });
-        }
-      });
-      t.addEventListener("keydown", function (e) {
-        var n = tabs.length, to = null;
-        if (e.key === "ArrowRight") to = (i + 1) % n;
-        if (e.key === "ArrowLeft") to = (i - 1 + n) % n;
-        if (e.key === "Home") to = 0;
-        if (e.key === "End") to = n - 1;
-        if (to !== null) { e.preventDefault(); select(to, true); }
       });
     });
   }
@@ -367,50 +308,20 @@
   }
   var herb = $("[data-season]");
   var seasonKey = currentSeason();
-  function setText(sel, val) { var el = $(sel, herb); if (el) el.textContent = val; }
-  function showSeason(key, animate) {
+  function setText(sel, val) { var el = herb && $(sel, herb); if (el) el.textContent = val; }
+  function showSeason(key) {
     var s = SEASONS[key];
     if (!herb || !s) return;
-    seasonKey = key;
-    var apply = function () {
-      var img = $("[data-season-img]", herb);
-      if (img.getAttribute("src") !== s.img) { img.srcset = s.srcset; img.src = s.img; img.width = s.w; img.height = s.h; }
-      img.alt = T(s.alt);
-      setText("[data-season-no]", T("Herbárium") + " · No. " + s.no);
-      setText("[data-season-latin-cap]", s.latin);
-      setText("[data-season-name]", T(s.name));
-      setText("[data-season-latin]", s.latin);
-      setText("[data-season-text]", T(s.text));
-      setText("[data-season-label]", T(s.label));
-      setText("[data-season-family]", T(s.family));
-      setText("[data-season-fact]", T(s.fact));
-      $$("[data-season-btn]", herb).forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-season-btn") === key)); });
-      herb.classList.remove("is-swapping");
-    };
-    if (animate && !reduceMotion) { herb.classList.add("is-swapping"); setTimeout(apply, 320); } else apply();
-  }
-  $$("[data-season-btn]").forEach(function (b) {
-    b.addEventListener("click", function () { showSeason(b.getAttribute("data-season-btn"), true); });
-  });
-
-  /* ---------- Gallery filmstrip + lightbox ---------- */
-  var strip = $("[data-gallery]");
-  var prevBtn = $("[data-strip-prev]"), nextBtn = $("[data-strip-next]");
-  function stripStep() { var f = $(".frame", strip); return f ? f.getBoundingClientRect().width + 20 : 400; }
-  function updateStripBtns() {
-    if (!strip || !prevBtn) return;
-    prevBtn.disabled = strip.scrollLeft <= 4;
-    nextBtn.disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 4;
-  }
-  if (strip && prevBtn && nextBtn) {
-    prevBtn.addEventListener("click", function () { strip.scrollBy({ left: -stripStep(), behavior: reduceMotion ? "auto" : "smooth" }); });
-    nextBtn.addEventListener("click", function () { strip.scrollBy({ left: stripStep(), behavior: reduceMotion ? "auto" : "smooth" }); });
-    strip.addEventListener("scroll", updateStripBtns, { passive: true });
-    window.addEventListener("resize", updateStripBtns);
-    window.addEventListener("load", updateStripBtns);
-    updateStripBtns();
+    var img = $("[data-season-img]", herb);
+    if (img.getAttribute("src") !== s.img) { img.srcset = s.srcset; img.src = s.img; img.width = s.w; img.height = s.h; }
+    img.alt = T(s.alt);
+    setText("[data-season-label]", T(s.label));
+    setText("[data-season-name]", T(s.name));
+    setText("[data-season-latin]", s.latin);
+    setText("[data-season-fact]", T(s.fact));
   }
 
+  /* ---------- Gallery lightbox ---------- */
   var lb = $("[data-lightbox]");
   var items = $$("[data-gallery] [data-full]");
   var lbIndex = 0;
@@ -446,47 +357,6 @@
     });
   }
 
-  /* ---------- One minute of calm (breathing) ---------- */
-  var br = $("[data-breathe]");
-  var breatheReset = function () {};
-  if (br) {
-    var brBtn = $("[data-breathe-btn]", br), brLabel = $("[data-breathe-label]", br),
-        brCount = $("[data-breathe-count]", br), brSr = $("[data-breathe-sr]", br);
-    var PHASES = [["is-in", "Belégzés…", 4], ["is-hold", "Tartsd bent…", 4], ["is-out", "Kilégzés…", 6]];
-    var CYCLES = 4, timer = null, tick = null, running = false;
-    var IDLE = "Lélegezz velem egy percig.";
-    var stop = function (finished) {
-      running = false; clearTimeout(timer); clearInterval(tick);
-      br.classList.remove("is-in", "is-hold", "is-out");
-      brLabel.textContent = T(finished ? "Köszönöm. Szeretettel várlak 🌿" : IDLE);
-      brCount.textContent = "";
-      brSr.textContent = finished ? T("Vége a gyakorlatnak. Köszönöm.") : "";
-      brBtn.textContent = T(finished ? "Még egyszer" : "Kezdjük");
-    };
-    breatheReset = function () { stop(false); };
-    var run = function (cycle, phase) {
-      if (!running) return;
-      if (cycle >= CYCLES) { stop(true); return; }
-      var p = PHASES[phase], left = p[2];
-      br.classList.remove("is-in", "is-hold", "is-out");
-      void br.offsetWidth; // restart the transition cleanly
-      br.classList.add(p[0]);
-      brLabel.textContent = T(p[1]);
-      brCount.textContent = String(left);
-      brSr.textContent = T(p[1]);
-      clearInterval(tick);
-      tick = setInterval(function () { left -= 1; if (left > 0) brCount.textContent = String(left); }, 1000);
-      timer = setTimeout(function () {
-        if (phase + 1 >= PHASES.length) run(cycle + 1, 0); else run(cycle, phase + 1);
-      }, p[2] * 1000);
-    };
-    brBtn.addEventListener("click", function () {
-      if (running) { stop(false); return; }
-      running = true; brBtn.textContent = T("Megállítom"); run(0, 0);
-    });
-    document.addEventListener("visibilitychange", function () { if (document.hidden && running) stop(false); });
-  }
-
   /* ---------- Easter egg: click the hero logo for a petal shower ---------- */
   var lastShower = 0;
   $$("[data-petals]").forEach(function (btn) {
@@ -519,8 +389,7 @@
   function renderAll() {
     applyStatic();
     renderServices();
-    showSeason(seasonKey, false);
-    breatheReset();
+    showSeason(seasonKey);
     updateMenuLabel();
     if (lb && lb.open) lbShow(lbIndex);
     if (sheet && sheet.open) closeDialog(sheet);

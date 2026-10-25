@@ -7,8 +7,10 @@
   d.classList.add("js");
   try {
     var m = /[?&]lang=([a-z]{2})/i.exec(location.search);
-    if (m && langs.indexOf(m[1].toLowerCase()) >= 0) {
-      lang = m[1].toLowerCase();
+    var q = m ? m[1].toLowerCase() : null;
+    if (q === "se") q = "sv"; // the button says SE; the language code for Swedish is "sv"
+    if (q && langs.indexOf(q) >= 0) {
+      lang = q;
       try { localStorage.setItem("esszencia-lang", lang); } catch (e) {}
     }
     if (!lang) { try { lang = localStorage.getItem("esszencia-lang"); } catch (e) {} }
