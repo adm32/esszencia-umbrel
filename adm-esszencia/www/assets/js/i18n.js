@@ -224,6 +224,7 @@ window.ESSZ_I18N = {
     "Fig. 01": ["Fig. 01", "Abb. 01", "Fig. 01"],
     "növényei": ["plants", "Pflanzen", "växter"],
 
+    "online foglalás": ["book online", "online buchen", "boka online"],
     /* ---- accessibility labels ---- */
     "Bezárás": ["Close", "Schließen", "Stäng"],
     "Előző kép": ["Previous image", "Vorheriges Bild", "Föregående bild"],

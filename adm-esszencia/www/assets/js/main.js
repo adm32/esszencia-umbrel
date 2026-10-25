@@ -48,7 +48,7 @@
 
   // Elements whose text is produced by this script – the static translator leaves them alone.
   var DYN = "[data-services-root],[data-season-name],[data-season-latin],[data-season-label],[data-season-fact],[data-season-img]," +
-            "[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-more],[data-no-i18n]";
+            "[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-more],[data-booking],[data-hours],[data-no-i18n]";
   var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, svg: 1, SVG: 1 };
   var textNodes = null, attrEls = null;
 
@@ -204,7 +204,16 @@
   }
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-book]");
-    if (b) { e.preventDefault(); openBooking(b.getAttribute("data-service") || ""); }
+    if (!b) return;
+    e.preventDefault();
+    if (doc.classList.contains("nav-open")) setNav(false);
+    // Online booking assistant (booking.js); the contact sheet is the fallback.
+    if (window.EsszBooking) {
+      var c = b.getAttribute("data-cat");
+      window.EsszBooking.open(c === null || c === "" ? null : +c);
+    } else {
+      openBooking(b.getAttribute("data-service") || "");
+    }
   });
   if (sheet) {
     $("[data-sheet-close]", sheet).addEventListener("click", function () { closeDialog(sheet); });
@@ -259,7 +268,7 @@
           : '<p class="acc__intro">' + esc(intro) + '</p>') : '') +
         '<ul class="svc-list' + (c.compact ? ' svc-list--two' : '') + '">' + c.items.map(row).join("") + '</ul>' +
         '<div class="acc__foot">' + (note ? '<p class="acc__note">' + esc(note) + '</p>' : '<span></span>') +
-        '<button class="btn btn--line" type="button" data-book data-service="' + esc(name) + '">' + esc(T("Időpontot kérek")) + '</button></div>' +
+        '<button class="btn btn--line" type="button" data-book data-cat="' + i + '" data-service="' + esc(name) + '">' + esc(T("Időpontot kérek")) + '</button></div>' +
         '</div></details>';
     });
     if (data.note) html += '<p class="services-note">' + esc(L(data.note)) + '</p>';
@@ -427,7 +436,11 @@
     moreLabels.forEach(function (f) { f(); });
     if (lb && lb.open) lbShow(lbIndex);
     if (sheet && sheet.open) closeDialog(sheet);
+    hooks.forEach(function (f) { try { f(); } catch (e) { /* keep going */ } });
     doc.classList.remove("i18n-pending");
   }
+  // Shared helpers for booking.js
+  var hooks = [];
+  window.ESSZ = { T: T, L: L, esc: esc, lang: function () { return lang; }, hooks: hooks, openContactSheet: openBooking };
   renderAll();
 })();

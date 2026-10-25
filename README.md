@@ -19,6 +19,35 @@ so Umbrel's login screen is switched off for it (`PROXY_AUTH_ADD: "false"`).
 To put it on a real domain, point a Cloudflare Tunnel public hostname at
 `http://<umbrel-ip>:4751`.
 
+## Online booking & statistics (second app)
+
+Install **Esszencia Foglalások** from the same store as well. It is the private
+back office (port **4752**, behind the Umbrel login) and it also runs the small
+public booking API on port **4753**, which the website reaches through its own
+nginx at `/api/` – nothing extra has to be exposed on the tunnel.
+
+* Customers pick a treatment (or describe what they want), a day and a time.
+  The request lands in the app and is emailed to the salon; the customer only gets
+  an email (in their language, with a calendar file) once it is accepted or declined.
+* Privacy: the site never shows the real schedule. It offers at most a few free
+  times per half-day, chosen in a secret order that changes every week, and a fully
+  booked day looks exactly like a closed day.
+* **Statisztika** button in the header switches to a simple dashboard: visitors per
+  day/week/month, where they came from, device, language, the booking funnel, clicks
+  (call, Messenger, e-mail, map, prices, gallery), most requested treatments and days.
+  It is anonymous and cookie-free – only daily totals are stored, unique visitors are
+  counted with a salt that is thrown away every day, bots are filtered out.
+
+### E-mail setup (once)
+
+1. Turn on 2-step verification for the Gmail account.
+2. Create an app password at <https://myaccount.google.com/apppasswords>.
+3. In the app: **Beállítások → E-mail küldés**, paste the 16-character password,
+   save, then press **Teszt e-mail**.
+
+The password is stored only on the Umbrel (`app-data/.../data/settings.json`),
+never in this repository or in the browser.
+
 ## Editing content
 
 | What | Where |
@@ -77,5 +106,11 @@ adm-esszencia/
   docker-compose.yml          nginx:stable-alpine + Umbrel app proxy
   nginx.conf                  gzip, caching, security headers (strict CSP)
   www/                        the website
+adm-esszencia-foglalasok/
+  umbrel-app.yml              Umbrel listing
+  docker-compose.yml          node:22-alpine + Umbrel app proxy (login protected)
+  server/server.js            booking + statistics server, no npm dependencies
+  server/lib/                 Gmail SMTP client, e-mail templates (HU/EN/DE/SV)
+  server/admin/               the back office (bookings + statistics dashboard)
 assets/                       icon, store screenshots, palette
 ```

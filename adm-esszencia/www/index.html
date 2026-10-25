@@ -129,7 +129,7 @@
           </figure>
           <dl class="info-card" aria-label="Röviden">
             <div><dt>Hely</dt><dd>Sénye, Haladás u. 2.</dd></div>
-            <div><dt data-i18n-key="@visit">Időpont</dt><dd>egyeztetéssel</dd></div>
+            <div><dt data-i18n-key="@visit">Időpont</dt><dd>online foglalás</dd></div>
             <div><dt>Nyelv</dt><dd>magyar · svéd · kis angol</dd></div>
           </dl>
         </div>
@@ -293,11 +293,12 @@
             <li><small>Telefon</small><a class="big" href="tel:+36706221208">+36 70 622 1208</a></li>
             <li><small>E-mail</small><a href="mailto:marianna.kosmetik@gmail.com">marianna.kosmetik@gmail.com</a></li>
             <li><small>Cím</small><span>8788 Sénye, Haladás u. 2.</span></li>
-            <li><small>Nyitvatartás</small><span>Előzetes időpont-egyeztetéssel</span></li>
+            <li><small>Nyitvatartás</small><span data-hours>H–P 9–18 · Szo 8–12 · V zárva</span></li>
             <li><small>Nyelv</small><span>magyar · svéd · kis angol</span></li>
           </ul>
           <div class="btn-row">
-            <a class="btn" href="tel:+36706221208"><svg aria-hidden="true"><use href="#i-phone"/></svg>Hívj fel</a>
+            <button class="btn" type="button" data-book>Időpontot kérek</button>
+            <a class="btn btn--line" href="tel:+36706221208"><svg aria-hidden="true"><use href="#i-phone"/></svg>Hívj fel</a>
             <a class="btn btn--line" href="https://m.me/61572319876098" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-msg"/></svg>Messenger</a>
           </div>
         </div>
@@ -352,6 +353,20 @@
     </div>
   </dialog>
 
+  <!-- Online booking assistant (booking.js) -->
+  <dialog class="book" data-booking aria-labelledby="bk-title">
+    <div class="book__in">
+      <header class="book__head">
+        <button type="button" class="book__icon" data-bk-back aria-label="Vissza"><svg aria-hidden="true"><use href="#i-left"/></svg></button>
+        <div class="book__titles"><h2 id="bk-title" data-bk-title>Időpontfoglalás</h2><p data-bk-steplabel></p></div>
+        <button type="button" class="book__icon" data-bk-close aria-label="Bezárás"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+      </header>
+      <div class="book__bar" aria-hidden="true"><span data-bk-bar></span></div>
+      <div class="book__body" data-bk-body></div>
+      <footer class="book__foot"><button type="button" class="btn book__next" data-bk-next disabled>Tovább</button></footer>
+    </div>
+  </dialog>
+
   <!-- Lightbox -->
   <dialog class="lightbox" data-lightbox aria-label="Kép nagyítva">
     <figure><img data-lb-img alt=""><figcaption data-lb-cap></figcaption></figure>
@@ -363,5 +378,7 @@
   <script src="assets/js/services.js" defer></script>
   <script src="assets/js/i18n.js" defer></script>
   <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/booking.js" defer></script>
+  <script src="assets/js/stats.js" defer></script>
 </body>
 </html>

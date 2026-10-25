@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      # <app-id>_<service>_1
+      APP_HOST: adm-esszencia-foglalasok_server_1
+      APP_PORT: 8080
+      # Private admin app: Umbrel's login screen stays ON (default).
+
+  server:
+    image: node:22-alpine
+    restart: on-failure
+    stop_grace_period: 5s
+    user: "1000:1000"
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      TZ: Europe/Budapest
+      DATA_DIR: /data
+      ADMIN_PORT: "8080"
+      PUBLIC_PORT: "3001"
+    ports:
+      # Public booking API used by the Esszencia website (free times + new requests only).
+      - "4753:3001"
+    volumes:
+      - ${APP_DATA_DIR}/server:/app:ro
+      - ${APP_DATA_DIR}/data:/data

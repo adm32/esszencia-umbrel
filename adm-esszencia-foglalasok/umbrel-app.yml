@@ -1,0 +1,45 @@
+manifestVersion: 1
+id: adm-esszencia-foglalasok
+name: Esszencia Foglalások
+tagline: Időpontfoglalások kezelése az Esszencia weboldalhoz
+icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-icon.svg
+category: productivity
+version: "1.0.0"
+port: 4752
+description: >-
+  Privát kezelőfelület az Esszencia Szépségműhely online időpontfoglalásaihoz.
+
+
+  Az új kérések itt jelennek meg (és e-mailben is értesít róluk). Egy gombnyomással
+  elfogadhatod vagy elutasíthatod őket – a vendég ekkor kap e-mailt a saját nyelvén,
+  elfogadáskor naptárfájllal. Kézi foglalás (pl. telefonos), áthelyezés, lemondás,
+  szabadság/zárás, nyitvatartás és Gmail beállítás.
+
+
+  Statisztika: a fejlécben lévő gombbal átválthatsz egy egyszerű irányítópultra –
+  látogatók naponta, honnan jöttek, telefon vagy gép, nyelvek, hányan jutottak
+  el a foglalásig, mire kattintanak és mely kezeléseket kérik. Anonim, sütik nélkül.
+
+
+  Adatvédelem: a weboldal sosem mutatja a teljes beosztást – naponta csak néhány
+  szabad időpontot ajánl fel titkos, hetente változó sorrendben.
+
+
+  Az Esszencia weboldal (adm-esszencia) ezen az appon keresztül fogad foglalásokat.
+  Telepítsd mindkettőt.
+developer: adm
+website: https://esszenciakozmetika.hu
+submitter: adm
+submission: https://github.com/adm32/esszencia-umbrel
+repo: https://github.com/adm32/esszencia-umbrel
+support: https://github.com/adm32/esszencia-umbrel/issues
+gallery:
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-1.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-2.jpg
+  - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-3.jpg
+releaseNotes: >-
+  Első kiadás: foglalási kérések kezelése, visszaigazoló e-mailek, naptár, zárások, beállítások és statisztika.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""

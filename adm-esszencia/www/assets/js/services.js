@@ -104,6 +104,7 @@ window.ESSZENCIA_SERVICES = {
     {
       name: { hu: "Gyanták – nőknek", en: "Waxing – women", de: "Waxing – Damen", sv: "Vaxning – kvinnor" },
       compact: true,
+      minutes: 30,          // length reserved in the online calendar
       note: {
         hu: "Teljes láb + bikini, illetve teljes láb + bikini + hónalj: kedvezményes áron!",
         en: "Full legs + bikini line, and full legs + bikini line + underarms: at a discounted price!",
@@ -127,6 +128,7 @@ window.ESSZENCIA_SERVICES = {
     {
       name: { hu: "Gyanták – férfiaknak", en: "Waxing – men", de: "Waxing – Herren", sv: "Vaxning – män" },
       compact: true,
+      minutes: 30,          // length reserved in the online calendar
       items: [
         { name: { hu: "Szemöldök", en: "Eyebrows", de: "Augenbrauen", sv: "Ögonbryn" }, price: "1 500 Ft" },
         { name: { hu: "Mellkas + has", en: "Chest + stomach", de: "Brust + Bauch", sv: "Bröst + mage" }, price: "4 000 – 4 500 Ft" },
@@ -140,6 +142,7 @@ window.ESSZENCIA_SERVICES = {
       name: { hu: "Festések", en: "Tinting", de: "Färben", sv: "Färgning" },
       intro: { hu: "Refectocil és Orenna professzionális festékekkel.", en: "With professional Refectocil and Orenna tints.", de: "Mit professionellen Farben von Refectocil und Orenna.", sv: "Med professionella färger från Refectocil och Orenna." },
       compact: true,
+      minutes: 30,          // length reserved in the online calendar
       items: [
         { name: { hu: "Szempillafestés", en: "Lash tint", de: "Wimpern färben", sv: "Färgning av fransar" }, price: "2 500 Ft" },
         { name: { hu: "Szemöldökfestés", en: "Brow tint", de: "Augenbrauen färben", sv: "Färgning av bryn" }, price: "2 500 Ft" },

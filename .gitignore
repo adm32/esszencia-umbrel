@@ -1,2 +1,4 @@
 .DS_Store
 *.log
+adm-esszencia-foglalasok/data/*
+!adm-esszencia-foglalasok/data/.gitkeep
