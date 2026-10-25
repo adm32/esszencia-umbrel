@@ -79,6 +79,7 @@
       <nav class="nav-side nav-side--right" aria-label="Fő navigáció – jobb">
         <a class="nav-link" href="#muhely">A műhely</a>
         <a class="nav-link" href="#kapcsolat">Kapcsolat</a>
+        <div class="lang-switch lang-switch--header" role="group" aria-label="Nyelv választása"><button type="button" data-lang="hu" lang="hu" aria-label="Magyar" aria-pressed="true">HU</button><button type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="false">EN</button><button type="button" data-lang="de" lang="de" aria-label="Deutsch" aria-pressed="false">DE</button><button type="button" data-lang="sv" lang="sv" aria-label="Svenska" aria-pressed="false">SV</button></div>
         <button class="nav-book" type="button" data-book>Időpont</button>
       </nav>
       <a class="call-btn" href="tel:+36706221208" aria-label="Hívás: +36 70 622 1208"><svg aria-hidden="true"><use href="#i-phone"/></svg></a>
@@ -86,6 +87,7 @@
   </header>
 
   <nav class="mobile-nav" id="mobile-nav" aria-label="Mobil navigáció">
+    <div class="lang-switch lang-switch--menu" role="group" aria-label="Nyelv választása"><button type="button" data-lang="hu" lang="hu" aria-label="Magyar" aria-pressed="true">HU</button><button type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="false">EN</button><button type="button" data-lang="de" lang="de" aria-label="Deutsch" aria-pressed="false">DE</button><button type="button" data-lang="sv" lang="sv" aria-label="Svenska" aria-pressed="false">SV</button></div>
     <a class="m-link" href="#rolam"><span>01</span>Bemutatkozás</a>
     <a class="m-link" href="#herbarium"><span>02</span>Herbárium</a>
     <a class="m-link" href="#kezelesek"><span>03</span>Kezelések</a>
@@ -130,7 +132,7 @@
              alt="A kezelőszoba fonott lámpával, pálmamintás tapétával, tükörrel és kezelőággyal">
         <dl class="specimen-tag" aria-label="Röviden">
           <div class="row"><dt>Hely</dt><dd>Sénye, Haladás u. 2.</dd></div>
-          <div class="row"><dt>Időpont</dt><dd>egyeztetéssel</dd></div>
+          <div class="row"><dt data-i18n-key="@visit">Időpont</dt><dd>egyeztetéssel</dd></div>
           <div class="row"><dt>Nyelv</dt><dd>magyar · svenska</dd></div>
         </dl>
       </div>
@@ -425,7 +427,7 @@
           <a href="tel:+36706221208">+36 70 622 1208</a><br><a href="mailto:marianna.kosmetik@gmail.com">marianna.kosmetik@gmail.com</a><br>8788 Sénye, Haladás u. 2.<br><a href="https://www.facebook.com/profile.php?id=61572319876098" target="_blank" rel="noopener">Facebook</a>
         </div>
       </div>
-      <div class="footer-bottom"><span>© <span data-year>2026</span> Esszencia Szépségműhely</span><span>Beauty &amp; Relax · Sénye</span></div>
+      <div class="footer-bottom"><span>© <span data-year>2026</span> Esszencia Szépségműhely</span><div class="lang-switch lang-switch--footer" role="group" aria-label="Nyelv választása"><button type="button" data-lang="hu" lang="hu" aria-label="Magyar" aria-pressed="true">HU</button><button type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="false">EN</button><button type="button" data-lang="de" lang="de" aria-label="Deutsch" aria-pressed="false">DE</button><button type="button" data-lang="sv" lang="sv" aria-label="Svenska" aria-pressed="false">SV</button></div><span>Beauty &amp; Relax · Sénye</span></div>
     </div>
   </footer>
 
@@ -459,6 +461,7 @@
   </dialog>
 
   <script src="assets/js/services.js" defer></script>
+  <script src="assets/js/i18n.js" defer></script>
   <script src="assets/js/main.js" defer></script>
 </body>
 </html>

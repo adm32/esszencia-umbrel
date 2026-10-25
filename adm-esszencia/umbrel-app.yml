@@ -15,6 +15,7 @@ description: >-
   termékek, aromaterápia, galéria és kapcsolat.
 
 
+  Négy nyelven (magyar, English, Deutsch, svenska), telefonra optimalizálva.
   Statikus oldal nginx-szel, külső függőség nélkül (a betűtípusok is helyben
   vannak). Az árlista a www/assets/js/services.js fájlban szerkeszthető.
 developer: adm
