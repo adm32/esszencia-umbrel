@@ -7,6 +7,10 @@
      needs: free times + creating a booking request. Nothing private.
    • ADMIN_PORT – the admin app (behind Umbrel's login via app_proxy):
      requests, confirm / decline / cancel, closures, settings.
+   • REMOTE_PORT (published as 4754) – the same admin app for use through a
+     Cloudflare Tunnel hostname, protected by its own password instead of the
+     Umbrel login (which only works on the Umbrel's own address). The password
+     can only be set from the Umbrel-protected address.
    Data lives in DATA_DIR as JSON (db.json, settings.json).
    All dates/times are Budapest wall-clock strings ("2026-11-03", "09:30").
    ========================================================================== */
@@ -20,6 +24,7 @@ const tpl = require('./lib/templates');
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const ADMIN_PORT = +process.env.ADMIN_PORT || 8080;
 const PUBLIC_PORT = +process.env.PUBLIC_PORT || 3001;
+const REMOTE_PORT = +process.env.REMOTE_PORT || 0;
 const TZ = 'Europe/Budapest';
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
@@ -111,7 +116,8 @@ function freeStarts(date, minutes, opts) {
   const b = busy(date, opts.excludeId);
   const step = settings.stepMinutes || 30;
   const res = [];
-  for (let s = open; s + minutes <= close; s += step) {
+  // The closing time is the last possible START: a treatment may run past closing.
+  for (let s = open; s <= close; s += step) {
     if (dayNum(date) * 1440 + s < earliest) continue;
     const e = s + minutes;
     if (b.some(([a, z]) => s < z && e > a)) continue;
@@ -425,6 +431,7 @@ function settingsForClient() {
   s.smtp.hasPass = !!settings.smtp.pass;
   delete s.smtp.pass;
   delete s.secret;
+  s.remote = { enabled: remoteEnabled(), setAt: (settings.remote && settings.remote.setAt) || null };
   return s;
 }
 
@@ -435,7 +442,8 @@ function state() {
   return { today: t.date, nowMin: t.min, bookings, blocks, mailConfigured: smtpConfigured(), settings: settingsForClient() };
 }
 
-async function adminApi(req, res) {
+async function adminApi(req, res, ctx) {
+  ctx = ctx || {};
   const url = new URL(req.url, 'http://x');
   const p = url.pathname.replace(/\/+$/, '') || '/';
 
@@ -452,7 +460,21 @@ async function adminApi(req, res) {
     try { body = await readBody(req, 65536); } catch (e) { return send(res, e.status || 400, { error: 'invalid' }); }
   }
 
-  if (req.method === 'GET' && p === '/api/admin/state') return send(res, 200, state());
+  if (req.method === 'GET' && p === '/api/admin/state') return send(res, 200, Object.assign(state(), { remoteSession: !!ctx.remote }));
+
+  // Remote-access password: only from the Umbrel-protected address, never through the tunnel.
+  if (p === '/api/admin/remote' && req.method === 'POST') {
+    if (ctx.remote) return send(res, 403, { error: 'A távoli jelszót csak az Umbrelen keresztül lehet módosítani.' });
+    if (body.disable) { settings.remote = { ver: ((settings.remote && settings.remote.ver) || 0) + 1 }; saveSettings(); }
+    else if (body.logoutAll) { if (remoteEnabled()) { settings.remote.ver++; saveSettings(); } }
+    else {
+      const pw = String(body.password || '');
+      if (pw.length < 10) return send(res, 400, { error: 'A jelszó legyen legalább 10 karakter.' });
+      if (pw.length > 200) return send(res, 400, { error: 'Túl hosszú jelszó.' });
+      setRemotePassword(pw);
+    }
+    return send(res, 200, { ok: true, settings: settingsForClient() });
+  }
 
   if (req.method === 'GET' && p === '/api/admin/stats') {
     const days = Math.min(365, Math.max(7, parseInt(url.searchParams.get('days'), 10) || 30));
@@ -618,6 +640,102 @@ async function adminApi(req, res) {
   return send(res, 404, { error: 'not found' });
 }
 
+
+/* ========================================================== REMOTE LOGIN
+   Password: scrypt hash in settings.remote. Session: signed cookie
+   "<version>.<expiry>.<hmac>"; bumping the version logs out every device. */
+const COOKIE = 'essz_remote';
+const SESSION_DAYS = 60;
+const remoteEnabled = () => !!(settings.remote && settings.remote.hash);
+function hashPassword(pw, salt) { return crypto.scryptSync(String(pw), salt, 64).toString('hex'); }
+function setRemotePassword(pw) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const ver = ((settings.remote && settings.remote.ver) || 0) + 1;
+  settings.remote = { hash: hashPassword(pw, salt), salt, ver, setAt: new Date().toISOString() };
+  saveSettings();
+}
+function checkPassword(pw) {
+  if (!remoteEnabled() || typeof pw !== 'string' || !pw || pw.length > 200) return false;
+  const a = Buffer.from(hashPassword(pw, settings.remote.salt), 'hex');
+  const b = Buffer.from(settings.remote.hash, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+const sign = (v) => crypto.createHmac('sha256', settings.secret + '|remote').update(v).digest('hex');
+function makeSession() {
+  const v = settings.remote.ver + '.' + (Date.now() + SESSION_DAYS * 86400000);
+  return v + '.' + sign(v);
+}
+function cookies(req) {
+  const out = {};
+  String(req.headers.cookie || '').split(';').forEach((c) => { const i = c.indexOf('='); if (i > 0) out[c.slice(0, i).trim()] = c.slice(i + 1).trim(); });
+  return out;
+}
+function validSession(req) {
+  if (!remoteEnabled()) return false;
+  const t = cookies(req)[COOKIE];
+  if (!t) return false;
+  const parts = t.split('.');
+  if (parts.length !== 3) return false;
+  const v = parts[0] + '.' + parts[1];
+  const sig = Buffer.from(parts[2]);
+  const good = Buffer.from(sign(v));
+  if (sig.length !== good.length || !crypto.timingSafeEqual(sig, good)) return false;
+  return +parts[0] === settings.remote.ver && +parts[1] > Date.now();
+}
+function isHttps(req) {
+  return req.headers['x-forwarded-proto'] === 'https' || /"scheme":"https"/.test(String(req.headers['cf-visitor'] || ''));
+}
+function sessionCookie(req, value, maxAge) {
+  return COOKIE + '=' + value + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + maxAge + (isHttps(req) ? '; Secure' : '');
+}
+const loginFails = new Map();
+function tooManyFails(key, max, windowMs) {
+  const t = Date.now();
+  const arr = (loginFails.get(key) || []).filter((x) => t - x < windowMs);
+  loginFails.set(key, arr);
+  return arr.length >= max;
+}
+const addFail = (key) => { const a = loginFails.get(key) || []; a.push(Date.now()); loginFails.set(key, a); };
+
+const LOGIN_FILES = { '/login': 'login.html', '/login.js': 'login.js', '/admin.css': 'admin.css', '/icon.svg': 'icon.svg', '/icon-192.png': 'icon-192.png', '/icon-512.png': 'icon-512.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+
+async function remoteApi(req, res) {
+  res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+  const url = new URL(req.url, 'http://x');
+  const p = url.pathname.replace(/\/+$/, '') || '/';
+
+  if (p === '/api/login-info' && req.method === 'GET') return send(res, 200, { enabled: remoteEnabled() });
+  if (p === '/api/login' && req.method === 'POST') {
+    if (req.headers['x-esszencia'] !== '1') return send(res, 403, { error: 'forbidden' });
+    const ip = clientIp(req);
+    if (!remoteEnabled()) return send(res, 403, { error: 'A távoli belépés nincs bekapcsolva. Az Umbrelen, a Beállításoknál lehet bekapcsolni.' });
+    if (tooManyFails('ip:' + ip, 8, 15 * 60000) || tooManyFails('all', 40, 3600000)) return send(res, 429, { error: 'Túl sok sikertelen próbálkozás. Próbáld újra 15 perc múlva.' });
+    let body = {};
+    try { body = await readBody(req, 4096); } catch (e) { return send(res, 400, { error: 'invalid' }); }
+    if (!checkPassword(body.password)) {
+      addFail('ip:' + ip); addFail('all');
+      await new Promise((r) => setTimeout(r, 600));
+      return send(res, 401, { error: 'Hibás jelszó.' });
+    }
+    loginFails.delete('ip:' + ip);
+    return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, makeSession(), SESSION_DAYS * 86400) });
+  }
+  if (p === '/api/logout' && req.method === 'POST') {
+    if (req.headers['x-esszencia'] !== '1') return send(res, 403, { error: 'forbidden' });
+    return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, '', 0) });
+  }
+  if (LOGIN_FILES[p] && (req.method === 'GET' || req.method === 'HEAD') && (p !== '/login' || !validSession(req))) {
+    return serveStatic(req, res, '/' + LOGIN_FILES[p]);
+  }
+  if (!validSession(req)) {
+    if (p.startsWith('/api/')) return send(res, 401, { error: 'Jelentkezz be újra.', login: true });
+    res.writeHead(302, { Location: '/login', 'Cache-Control': 'no-store' });
+    return res.end();
+  }
+  if (p === '/login') { res.writeHead(302, { Location: '/' }); return res.end(); }
+  return adminApi(req, res, { remote: true });
+}
+
 /* ------------------------------------------------------------ housekeeping */
 function purge() {
   // Personal data is not kept forever: bookings older than a year are removed.
@@ -640,10 +758,12 @@ function wrap(handler, name) {
   };
 }
 const publicServer = http.createServer(wrap(publicApi, 'public'));
-const adminServer = http.createServer(wrap(adminApi, 'admin'));
+const adminServer = http.createServer(wrap((req, res) => adminApi(req, res), 'admin'));
+const remoteServer = REMOTE_PORT ? http.createServer(wrap(remoteApi, 'remote')) : null;
 publicServer.requestTimeout = adminServer.requestTimeout = 30000;
+if (remoteServer) { remoteServer.requestTimeout = 30000; remoteServer.listen(REMOTE_PORT, () => console.log('Remote admin (own password) on :' + REMOTE_PORT)); }
 publicServer.listen(PUBLIC_PORT, () => console.log('Public booking API on :' + PUBLIC_PORT));
 adminServer.listen(ADMIN_PORT, () => console.log('Admin app on :' + ADMIN_PORT));
-['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => { try { flushStats(); } catch (e) {} publicServer.close(); adminServer.close(); process.exit(0); }));
+['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => { try { flushStats(); } catch (e) {} publicServer.close(); adminServer.close(); if (remoteServer) remoteServer.close(); process.exit(0); }));
 
 module.exports = { freeStarts, offered, weekday, now, addDays };

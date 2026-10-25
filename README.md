@@ -38,6 +38,27 @@ nginx at `/api/` – nothing extra has to be exposed on the tunnel.
   It is anonymous and cookie-free – only daily totals are stored, unique visitors are
   counted with a salt that is thrown away every day, bots are filtered out.
 
+* **Naptár** tab: a clean month grid (dots for bookings, closures and new requests)
+  with a day timeline underneath; tap a booking for its details and actions, tap an
+  empty spot to add a booking at that time. Swipe the month left/right.
+* Opening hours are *start* times: the closing time is the last possible start,
+  even if the treatment runs past it (e.g. a 2-hour treatment at 18:00).
+
+### Using it on a domain (e.g. kezelo.esszenciakozmetika.hu)
+
+Umbrel's own login only works on the Umbrel's address, so a tunnel hostname can't
+point at port 4752. Instead:
+
+1. Open the app on the Umbrel (port 4752) → **Beállítások → Távoli elérés**, and set
+   a password (at least 10 characters). Until then the remote port stays locked.
+2. In the Cloudflare tunnel, point the hostname at port **4754** (same host as the
+   website's route, only the port differs).
+3. Optionally set **Beállítások → Linkek** to the new address, so the button in the
+   notification e-mails opens it.
+
+The remote password can only be changed from the Umbrel address; failed logins are
+rate-limited, and **Kijelentkeztetés minden eszközről** signs out every device.
+
 ### E-mail setup (once)
 
 1. Turn on 2-step verification for the Gmail account.

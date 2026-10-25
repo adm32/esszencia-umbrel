@@ -4,7 +4,7 @@ name: Esszencia Foglalások
 tagline: Időpontfoglalások kezelése az Esszencia weboldalhoz
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-icon.svg
 category: productivity
-version: "1.0.0"
+version: "1.1.0"
 port: 4752
 description: >-
   Privát kezelőfelület az Esszencia Szépségműhely online időpontfoglalásaihoz.
@@ -38,7 +38,9 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-2.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-3.jpg
 releaseNotes: >-
-  Első kiadás: foglalási kérések kezelése, visszaigazoló e-mailek, naptár, zárások, beállítások és statisztika.
+  Távoli elérés saját jelszóval: az app egy Cloudflare-címen (pl. kezelo.esszenciakozmetika.hu) is használható – a Cloudflare-útvonal a 4754-es portra mutasson. A jelszót a Beállítások → Távoli elérés résznél lehet megadni.
+  Új, letisztult naptár: havi nézet pöttyökkel és napi idővonal; érintéssel részletek, üres helyre koppintva új foglalás.
+  A zárás időpontja az utolsó kezdés: pl. 18:00-kor is lehet foglalni egy 2 órás kezelést.
 dependencies: []
 path: ""
 defaultUsername: ""

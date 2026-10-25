@@ -22,6 +22,7 @@
       credentials: 'same-origin'
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) {
+        if (r.status === 401 && d.login) { location.href = '/login'; }
         if (!r.ok) { var e = new Error(d.error || ('Hiba (' + r.status + ')')); e.status = r.status; e.data = d; throw e; }
         return d;
       });
@@ -151,27 +152,174 @@
     return Object.keys(map).sort().map(function (d) { return { day: d, items: map[d] }; });
   }
 
+  /* ---------------- calendar (month grid + day timeline) ---------------- */
+  var cal = { sel: null, month: null };
+  var HOUR = 56;
+  var cap = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
+  function monthOf(d) { return d.slice(0, 7) + '-01'; }
+  function addMonthsTo(m, n) { var d = dateObj(m); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); }
+  function calItems() {
+    var byDay = {};
+    var push = function (d, it) { (byDay[d] = byDay[d] || []).push(it); };
+    S.bookings.forEach(function (b) { if (b.status === 'confirmed' || b.status === 'pending') push(b.date, { kind: 'b', b: b }); });
+    S.blocks.forEach(function (k) {
+      var d = k.date, to = k.dateTo || k.date, guard = 0;
+      while (d <= to && guard++ < 400) { push(d, { kind: 'k', k: k }); d = addDays(d, 1); }
+    });
+    return byDay;
+  }
+  function lanes(evs) {
+    // side-by-side columns for overlapping events (like a calendar day view)
+    evs.sort(function (a, b) { return a.s - b.s || b.e - a.e; });
+    var groups = [], cur = null;
+    evs.forEach(function (ev) {
+      if (!cur || ev.s >= cur.end) { cur = { end: ev.e, cols: [], items: [] }; groups.push(cur); }
+      cur.end = Math.max(cur.end, ev.e);
+      var c = 0; while (cur.cols[c] > ev.s) c++;
+      cur.cols[c] = ev.e; ev.col = c; cur.items.push(ev);
+    });
+    groups.forEach(function (g) { g.items.forEach(function (ev) { ev.cols = g.cols.length; }); });
+    return evs;
+  }
   function renderCalendar() {
     var el = $('[data-view="calendar"]');
-    var items = S.bookings.filter(function (b) { return (b.status === 'confirmed' || b.status === 'pending') && !isPast(b); })
-      .map(function (b) { return Object.assign({ _day: b.date, _kind: 'b' }, b); });
-    S.blocks.forEach(function (k) {
-      var to = k.dateTo || k.date;
-      if (to < S.today) return;
-      items.push(Object.assign({ _day: k.date < S.today ? S.today : k.date, _kind: 'k' }, k));
+    if (!cal.sel) { cal.sel = S.today; cal.month = monthOf(S.today); }
+    var byDay = calItems();
+    var m = cal.month;
+    var first = dateObj(m);
+    var offset = (first.getUTCDay() + 6) % 7;
+    var dim = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+    var rows = Math.ceil((offset + dim) / 7);
+    var startDay = addDays(m, -offset);
+    var title = cap(new Intl.DateTimeFormat('hu-HU', { month: 'long', timeZone: 'UTC' }).format(first));
+
+    var grid = '';
+    for (var r = 0; r < rows; r++) {
+      grid += '<div class="acal__week">';
+      for (var c = 0; c < 7; c++) {
+        var d = addDays(startDay, r * 7 + c);
+        var its = byDay[d] || [];
+        var dots = its.slice(0, 3).map(function (it) {
+          return '<i class="dot dot--' + (it.kind === 'k' ? 'block' : it.b.status) + '"></i>';
+        }).join('');
+        var cls = 'acal__day' + (d.slice(0, 7) !== m.slice(0, 7) ? ' is-out' : '') + (d === S.today ? ' is-today' : '') + (d === cal.sel ? ' is-sel' : '') + (c >= 5 ? ' is-weekend' : '');
+        grid += '<button type="button" class="' + cls + '" data-cal-day="' + d + '" aria-label="' + esc(fmtDay(d)) + (its.length ? ', ' + its.length + ' bejegyzés' : '') + '" aria-pressed="' + (d === cal.sel) + '">' +
+          '<span class="acal__n">' + dateObj(d).getUTCDate() + '</span><span class="acal__dots">' + dots + '</span></button>';
+      }
+      grid += '</div>';
+    }
+
+    // ----- day timeline -----
+    var sel = cal.sel;
+    var items = byDay[sel] || [];
+    var allDay = items.filter(function (it) { return it.kind === 'k' && (it.k.allDay || !it.k.from); });
+    var evs = items.filter(function (it) { return !(it.kind === 'k' && (it.k.allDay || !it.k.from)); }).map(function (it) {
+      if (it.kind === 'k') return { it: it, s: toMin(it.k.from), e: toMin(it.k.to) };
+      return { it: it, s: toMin(it.b.time), e: toMin(it.b.time) + it.b.minutes };
     });
-    if (!items.length) {
-      el.innerHTML = '<div class="empty"><b>Nincs közelgő foglalás</b>A visszaigazolt időpontok és a zárások itt jelennek meg napok szerint.</div>';
+    var hours = S.settings.hours[dateObj(sel).getUTCDay()];
+    if (allDay.length) hours = null; // closed all day (holiday, training…)
+    var h0 = Math.min(hours ? Math.floor(toMin(hours[0]) / 60) : 8, 8);
+    var h1 = Math.max(hours ? Math.ceil(toMin(hours[1]) / 60) + 2 : 19, 19);
+    evs.forEach(function (ev) { h0 = Math.min(h0, Math.floor(ev.s / 60)); h1 = Math.max(h1, Math.ceil(ev.e / 60)); });
+    h1 = Math.min(24, h1);
+    lanes(evs);
+    var y = function (min) { return (min - h0 * 60) / 60 * HOUR; };
+    var tl = '';
+    for (var h = h0; h <= h1; h++) {
+      tl += '<div class="tl__hour" style="top:' + y(h * 60) + 'px"><span>' + h + ':00</span></div>';
+    }
+    if (hours) {
+      tl += '<div class="tl__closed" style="top:0;height:' + Math.max(0, y(toMin(hours[0]))) + 'px"></div>' +
+        '<div class="tl__closed" style="top:' + y(toMin(hours[1])) + 'px;bottom:0" title="Zárás után (kezelés még tarthat)"></div>';
+    } else {
+      tl += '<div class="tl__closed" style="top:0;bottom:0"></div>';
+    }
+    evs.forEach(function (ev) {
+      var top = y(ev.s), ht = Math.max(22, y(ev.e) - y(ev.s) - 2);
+      var left = 'calc(' + (ev.col / ev.cols * 100) + '% + 2px)', width = 'calc(' + (100 / ev.cols) + '% - 4px)';
+      var style = 'top:' + top + 'px;height:' + ht + 'px;left:' + left + ';width:' + width;
+      if (ev.it.kind === 'k') {
+        var k = ev.it.k;
+        tl += '<button type="button" class="ev ev--block" style="' + style + '" data-cal-block="' + esc(k.id) + '"><b>Zárva</b> ' + esc(k.from) + '–' + esc(k.to) + (k.note ? ' · ' + esc(k.note) : '') + '</button>';
+        return;
+      }
+      var b = ev.it.b, past = isPast(b);
+      var short = ht < 44;
+      tl += '<button type="button" class="ev ev--' + b.status + (past ? ' is-past' : '') + (short ? ' is-short' : '') + '" style="' + style + '" data-cal-ev="' + esc(b.id) + '">' +
+        (b.status === 'pending' ? '<em>Új kérés</em>' : '') +
+        '<b>' + esc(b.service && b.service.hu || 'Kezelés') + '</b>' +
+        '<span>' + esc(b.time) + '–' + esc(endOf(b)) + ' · ' + esc(b.name) + '</span></button>';
+    });
+    if (sel === S.today && S.nowMin >= h0 * 60 && S.nowMin <= h1 * 60) {
+      tl += '<div class="tl__now" style="top:' + y(S.nowMin) + 'px"><span>' + fromMin(S.nowMin) + '</span></div>';
+    }
+    var guests = items.filter(function (it) { return it.kind === 'b'; }).length;
+    var dayTitle = cap(new Intl.DateTimeFormat('hu-HU', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(dateObj(sel)));
+    var rel = relDay(sel);
+
+    el.innerHTML = '<div class="acal">' +
+      '<div class="acal__head"><h2 class="acal__title">' + esc(title) + ' <span>' + first.getUTCFullYear() + '</span></h2>' +
+        '<div class="acal__nav"><button type="button" class="acal__today" data-cal-today>Ma</button>' +
+        '<button type="button" class="acal__arrow" data-cal-month="-1" aria-label="Előző hónap"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+        '<button type="button" class="acal__arrow" data-cal-month="1" aria-label="Következő hónap"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div></div>' +
+      '<div class="acal__wd">' + ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'].map(function (w, i) { return '<span' + (i >= 5 ? ' class="is-weekend"' : '') + '>' + w + '</span>'; }).join('') + '</div>' +
+      '<div class="acal__grid" data-cal-grid>' + grid + '</div>' +
+      '<div class="acal__dayhead"><strong>' + esc(dayTitle) + '</strong><span>' + (rel ? esc(rel) + ' · ' : '') + (hours ? 'nyitva ' + hours[0] + '–' + hours[1] : 'zárva') + (guests ? ' · ' + guests + ' vendég' : '') + '</span></div>' +
+      (allDay.length ? '<div class="acal__allday">' + allDay.map(function (it) {
+        return '<button type="button" class="ev ev--block ev--allday" data-cal-block="' + esc(it.k.id) + '"><b>Zárva egész nap</b>' + (it.k.note ? ' · ' + esc(it.k.note) : '') + '</button>';
+      }).join('') + '</div>' : '') +
+      '<div class="tl" data-tl style="height:' + (y(h1 * 60) + 12) + 'px" data-h0="' + h0 + '"><div class="tl__lane">' + tl + '</div></div>' +
+      '</div>';
+
+    // swipe the month grid left/right
+    var g = $('[data-cal-grid]', el), sx = null, sy = null;
+    g.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    g.addEventListener('touchend', function (e) {
+      if (sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) calMove(dx < 0 ? 1 : -1);
+    });
+  }
+  function calMove(n) {
+    cal.month = addMonthsTo(cal.month, n);
+    cal.sel = cal.month.slice(0, 7) === S.today.slice(0, 7) ? S.today : cal.month;
+    renderCalendar();
+  }
+  // event details as a sheet with the usual actions
+  var evDlg = $('[data-event]');
+  function openEvent(html) {
+    $('[data-event-body]').innerHTML = html;
+    evDlg.showModal();
+    $('[data-event-close]').focus();
+  }
+  document.addEventListener('click', function (e) {
+    if (tab !== 'calendar' || !S) return;
+    var t;
+    if ((t = e.target.closest('[data-cal-day]'))) { cal.sel = t.getAttribute('data-cal-day'); if (monthOf(cal.sel) !== cal.month) cal.month = monthOf(cal.sel); renderCalendar(); return; }
+    if ((t = e.target.closest('[data-cal-month]'))) { calMove(+t.getAttribute('data-cal-month')); return; }
+    if (e.target.closest('[data-cal-today]')) { cal.sel = S.today; cal.month = monthOf(S.today); renderCalendar(); return; }
+    if ((t = e.target.closest('[data-cal-ev]'))) { var b = find(t.getAttribute('data-cal-ev')); if (b) openEvent(card(b)); return; }
+    if ((t = e.target.closest('[data-cal-block]'))) {
+      var id = t.getAttribute('data-cal-block');
+      var k = S.blocks.filter(function (x) { return x.id === id; })[0];
+      if (k) openEvent(blockCard(k));
       return;
     }
-    el.innerHTML = groupByDay(items).map(function (g) {
-      g.items.sort(function (a, b) { return (a._kind === 'k' ? '00:00' : a.time).localeCompare(b._kind === 'k' ? '00:00' : b.time); });
-      var count = g.items.filter(function (x) { return x._kind === 'b'; }).length;
-      var rel = relDay(g.day);
-      return '<h3 class="day-head">' + esc(fmtDay(g.day)) + (rel ? ' · ' + rel : '') + '<small>' + (count ? count + ' vendég' : '') + '</small></h3>' +
-        g.items.map(function (x) { return x._kind === 'k' ? blockCard(x) : card(x); }).join('');
-    }).join('');
-  }
+    var lane = e.target.closest('.tl__lane');
+    if (lane && e.target === lane || e.target.classList && (e.target.classList.contains('tl__hour') || e.target.classList.contains('tl__closed'))) {
+      // tap on an empty spot → new booking at that time
+      var tlEl = $('[data-tl]');
+      var rect = tlEl.getBoundingClientRect();
+      var min = parseInt(tlEl.getAttribute('data-h0'), 10) * 60 + Math.floor((e.clientY - rect.top) / HOUR * 2) * 30;
+      newBooking(cal.sel, fromMin(Math.max(0, Math.min(23 * 60 + 30, min))));
+    }
+  });
+  evDlg.addEventListener('click', function (e) {
+    if (e.target === evDlg || e.target.closest('[data-event-close]')) { evDlg.close(); return; }
+    if (e.target.closest('[data-act]')) setTimeout(function () { if (evDlg.open) evDlg.close(); }, 0);
+  });
 
   function renderPast() {
     var el = $('[data-view="past"]');
@@ -306,16 +454,16 @@
     refresh();
   }
 
-  function newBooking() {
+  function newBooking(presetDate, presetTime) {
     openDialog('Új foglalás (pl. telefonon egyeztetve)',
       '<label class="field"><span>Vendég neve *</span><input name="name" required autocomplete="off"></label>' +
       '<div class="row2"><label class="field"><span>Telefon</span><input name="phone" type="tel" autocomplete="off"></label>' +
       '<label class="field"><span>E-mail</span><input name="email" type="email" autocomplete="off"></label></div>' +
       '<label class="field"><span>Kezelés</span><input name="serviceHu" placeholder="Pl. Alap kiskezelés – arc"></label>' +
-      '<div class="row2"><label class="field"><span>Nap *</span><input type="date" name="date" value="' + S.today + '" required></label>' +
+      '<div class="row2"><label class="field"><span>Nap *</span><input type="date" name="date" value="' + (presetDate || S.today) + '" required></label>' +
       '<label class="field"><span>Időtartam</span>' + durSelect('minutes', 60) + '</label></div>' +
       '<div class="field"><span>Szabad kezdési időpontok</span><div class="times" data-times></div></div>' +
-      '<label class="field"><span>Kezdés *</span><input type="time" name="time" step="300" required></label>' +
+      '<label class="field"><span>Kezdés *</span><input type="time" name="time" step="300" required value="' + (presetTime || '') + '"></label>' +
       '<label class="field"><span>Megjegyzés</span><textarea name="note"></textarea></label>' +
       '<label class="check"><input type="checkbox" name="send"><span>Visszaigazoló e-mail küldése (ha van e-mail cím)</span></label>',
       'Foglalás mentése', function (fd) {
@@ -332,11 +480,11 @@
     refresh();
   }
 
-  function newBlock() {
+  function newBlock(presetDate) {
     openDialog('Zárás / szabadság',
       '<p style="color:var(--soft);font-size:.93rem">Ezekre a napokra (vagy órákra) a weboldalon nem lehet foglalni. A meglévő foglalások megmaradnak.</p>' +
-      '<div class="row2"><label class="field"><span>Első nap *</span><input type="date" name="date" value="' + S.today + '" required></label>' +
-      '<label class="field"><span>Utolsó nap</span><input type="date" name="dateTo" value="' + S.today + '"></label></div>' +
+      '<div class="row2"><label class="field"><span>Első nap *</span><input type="date" name="date" value="' + (presetDate || S.today) + '" required></label>' +
+      '<label class="field"><span>Utolsó nap</span><input type="date" name="dateTo" value="' + (presetDate || S.today) + '"></label></div>' +
       '<label class="check"><input type="checkbox" name="allDay" checked data-allday><span>Egész nap</span></label>' +
       '<div class="row2" data-hours-only hidden><label class="field"><span>Ettől</span><input type="time" name="from" value="12:00" step="900"></label>' +
       '<label class="field"><span>Eddig</span><input type="time" name="to" value="14:00" step="900"></label></div>' +
@@ -351,12 +499,57 @@
     $('input[name=date]', body).addEventListener('change', function (e) { var t = $('input[name=dateTo]', body); if (!t.value || t.value < e.target.value) t.value = e.target.value; });
   }
 
+  /* ---------------- remote access (own password, for a tunnel hostname) ---------------- */
+  function remotePanel() {
+    var r = S.settings.remote || {};
+    if (S.remoteSession) {
+      return '<div class="panel"><h3>Távoli elérés</h3><p>Ezen a címen jelszóval vagy belépve. A jelszót csak az Umbrelen keresztül lehet megváltoztatni.</p>' +
+        '<button type="button" class="btn btn--line" data-logout>Kijelentkezés erről az eszközről</button></div>';
+    }
+    return '<div class="panel"><h3>Távoli elérés</h3>' +
+      '<p>' + (r.enabled
+        ? '<strong>Bekapcsolva</strong>' + (r.setAt ? ' (jelszó beállítva: ' + esc(fmtStamp(r.setAt)) + ')' : '') + '. Az app saját jelszóval elérhető a 4754-es porton, pl. egy Cloudflare-címen (kezelo.esszenciakozmetika.hu).'
+        : 'Ha az appot Umbrel nélkül, egy saját címen is el szeretnéd érni (pl. kezelo.esszenciakozmetika.hu), adj meg egy jelszót. A Cloudflare-útvonal a 4754-es portra mutasson.') + '</p>' +
+      '<form data-remote novalidate>' +
+      '<input type="text" name="username" value="esszencia" autocomplete="username" hidden>' +
+      '<label class="field"><span>' + (r.enabled ? 'Új jelszó' : 'Jelszó') + '</span><input name="pw1" type="password" autocomplete="new-password" minlength="10"><small>Legalább 10 karakter. Egy hosszabb mondat is jó, pl. „csipkebogyó tea reggel 7-kor”.</small></label>' +
+      '<label class="field"><span>Jelszó még egyszer</span><input name="pw2" type="password" autocomplete="new-password"></label>' +
+      '<button type="submit" class="btn">' + (r.enabled ? 'Jelszó cseréje' : 'Bekapcsolás') + '</button>' +
+      (r.enabled ? '<div class="card__actions"><button type="button" class="btn btn--line btn--small" data-remote-logoutall>Kijelentkeztetés minden eszközről</button><button type="button" class="btn btn--bad btn--small" data-remote-off>Kikapcsolás</button></div>' : '') +
+      '</form></div>';
+  }
+  function bindRemotePanel(el) {
+    var lo = $('[data-logout]', el);
+    if (lo) lo.addEventListener('click', function () {
+      api('/api/logout', { method: 'POST', body: {} }).then(function () { location.href = '/login'; }).catch(function (e) { toast(e.message, true); });
+    });
+    var f = $('[data-remote]', el);
+    if (!f) return;
+    function post(body, okText) {
+      return api('/api/admin/remote', { method: 'POST', body: body }).then(function (r) {
+        S.settings = r.settings; toast(okText); renderSettings();
+      }).catch(function (e) { toast(e.message, true); });
+    }
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (f.pw1.value.length < 10) return toast('A jelszó legyen legalább 10 karakter.', true);
+      if (f.pw1.value !== f.pw2.value) return toast('A két jelszó nem egyezik.', true);
+      post({ password: f.pw1.value }, 'Jelszó elmentve. A többi eszközön újra be kell lépni.');
+    });
+    var all = $('[data-remote-logoutall]', el);
+    if (all) all.addEventListener('click', function () { post({ logoutAll: true }, 'Minden eszköz kijelentkeztetve.'); });
+    var off = $('[data-remote-off]', el);
+    if (off) off.addEventListener('click', function () {
+      if (confirm('Kikapcsolod a távoli elérést? Utána csak az Umbrelen keresztül lehet belépni.')) post({ disable: true }, 'Távoli elérés kikapcsolva.');
+    });
+  }
+
   /* ---------------- settings ---------------- */
   function renderSettings() {
     var s = S.settings;
     var order = [1, 2, 3, 4, 5, 6, 0];
     var el = $('[data-view="settings"]');
-    el.innerHTML = '<form data-settings novalidate>' +
+    el.innerHTML = remotePanel() + '<form data-settings novalidate>' +
       '<div class="panel"><h3>E-mail küldés (Gmail)</h3>' +
       '<p>Erről a címről mennek a visszaigazolások a vendégeknek, és ide érkeznek az új kérések.</p>' +
       '<label class="field"><span>Gmail cím</span><input name="user" type="email" value="' + esc(s.smtp.user) + '" autocomplete="off"></label>' +
@@ -371,7 +564,7 @@
       '<label class="field"><span>Új kérések értesítése erre a címre</span><input name="notifyEmail" type="email" value="' + esc(s.notifyEmail) + '"></label>' +
       '<button type="button" class="btn btn--line" data-test-mail>Teszt e-mail küldése</button></div>' +
 
-      '<div class="panel"><h3>Nyitvatartás</h3><p>Csak ezekben az időkben lehet foglalni a weboldalon.</p>' +
+      '<div class="panel"><h3>Nyitvatartás</h3><p>Ezekben az időkben lehet kezdeni a kezelést. A zárás az utolsó kezdési időpont – a kezelés tovább is tarthat (pl. 18:00-kor kezdődő 2 órás kezelés).</p>' +
       order.map(function (d) {
         var h = s.hours[d];
         return '<div class="hours-row" data-day="' + d + '"><strong>' + DAYS[d].charAt(0).toUpperCase() + DAYS[d].slice(1) + '</strong>' +
@@ -395,6 +588,7 @@
 
       '<div class="save-bar"><button type="submit" class="btn">Beállítások mentése</button></div></form>';
 
+    bindRemotePanel(el);
     $$('.hours-row', el).forEach(function (row) {
       $('[data-open]', row).addEventListener('change', function (e) {
         var on = e.target.checked;
@@ -450,8 +644,9 @@
       act(a.closest('[data-id]').getAttribute('data-id'), kind);
       return;
     }
-    if (e.target.closest('[data-new-booking]')) return newBooking();
-    if (e.target.closest('[data-new-block]')) return newBlock();
+    var preset = tab === 'calendar' && cal.sel && cal.sel >= S.today ? cal.sel : null;
+    if (e.target.closest('[data-new-booking]')) return newBooking(preset);
+    if (e.target.closest('[data-new-block]')) return newBlock(preset);
     if (e.target.closest('[data-refresh]')) { if (window.EsszDash && window.EsszDash.active()) return window.EsszDash.reload(true); return load(true); }
   });
 
