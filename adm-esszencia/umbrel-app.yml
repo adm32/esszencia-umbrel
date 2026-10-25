@@ -1,0 +1,36 @@
+manifestVersion: 1
+id: adm-esszencia
+name: Esszencia
+tagline: Az Esszencia Szépségműhely weboldala
+icon: https://raw.githubusercontent.com/__GH_REPO__/main/assets/icon.svg
+category: social
+version: "1.0.0"
+port: 4751
+description: >-
+  Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
+
+
+  Természetközeli, „herbárium” hangulatú egyoldalas oldal: bemutatkozás,
+  a szezon növénye, kezelések és árak, a Séance-élmény, Magister Products
+  termékek, aromaterápia, galéria és kapcsolat.
+
+
+  Statikus oldal nginx-szel, külső függőség nélkül (a betűtípusok is helyben
+  vannak). Az árlista a www/assets/js/services.js fájlban szerkeszthető.
+developer: adm
+website: https://www.facebook.com/profile.php?id=61572319876098
+submitter: adm
+submission: https://github.com/__GH_REPO__
+repo: https://github.com/__GH_REPO__
+support: https://github.com/__GH_REPO__/issues
+gallery:
+  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-1.jpg
+  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-2.jpg
+  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-3.jpg
+  - https://raw.githubusercontent.com/__GH_REPO__/main/assets/gallery-4.jpg
+releaseNotes: >-
+  Első kiadás.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
