@@ -48,7 +48,7 @@
 
   // Elements whose text is produced by this script – the static translator leaves them alone.
   var DYN = "[data-services-root],[data-season-name],[data-season-latin],[data-season-label],[data-season-fact],[data-season-img]," +
-            "[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-no-i18n]";
+            "[data-lb-cap],[data-lb-img],[data-sheet-service],[data-menu-label],[data-more],[data-no-i18n]";
   var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, svg: 1, SVG: 1 };
   var textNodes = null, attrEls = null;
 
@@ -110,6 +110,8 @@
     var b = e.target.closest("[data-lang]");
     if (b) { e.preventDefault(); setLang(b.getAttribute("data-lang")); }
   });
+
+  var moreLabels = [];
 
   /* ---------- Year ---------- */
   $$("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
@@ -321,6 +323,37 @@
     setText("[data-season-fact]", T(s.fact));
   }
 
+  /* ---------- "Show all products" (phones) ---------- */
+  $$("[data-more]").forEach(function (btn) {
+    var list = $(btn.getAttribute("data-more"));
+    var label = $("span", btn);
+    var setLabel = function () { label.textContent = T(list.classList.contains("is-open") ? "Kevesebb" : "Mutasd mind a 8 terméket"); };
+    btn.addEventListener("click", function () {
+      var open = list.classList.toggle("is-open");
+      btn.setAttribute("aria-expanded", String(open));
+      setLabel();
+    });
+    moreLabels.push(setLabel);
+  });
+
+  /* ---------- Phone gallery counter (1 / 5) ---------- */
+  var galleryList = $("[data-gallery]"), gPos = $("[data-gallery-pos]"), gTotal = $("[data-gallery-total]");
+  if (galleryList && gPos) {
+    var slides = $$("li", galleryList);
+    if (gTotal) gTotal.textContent = slides.length;
+    galleryList.addEventListener("scroll", function () {
+      var left = galleryList.scrollLeft, best = 0, bestD = Infinity;
+      slides.forEach(function (li, i) { var d = Math.abs(li.offsetLeft - galleryList.offsetLeft - left - parseFloat(getComputedStyle(galleryList).paddingLeft || 0)); if (d < bestD) { bestD = d; best = i; } });
+      gPos.textContent = best + 1;
+    }, { passive: true });
+  }
+
+  /* ---------- Pause the drifting leaves when the hero is off-screen ---------- */
+  var leaves = $(".leaves");
+  if (leaves && hasIO) {
+    new IntersectionObserver(function (en) { leaves.classList.toggle("is-paused", !en[0].isIntersecting); }).observe(leaves);
+  }
+
   /* ---------- Gallery lightbox ---------- */
   var lb = $("[data-lightbox]");
   var items = $$("[data-gallery] [data-full]");
@@ -391,6 +424,7 @@
     renderServices();
     showSeason(seasonKey);
     updateMenuLabel();
+    moreLabels.forEach(function (f) { f(); });
     if (lb && lb.open) lbShow(lbIndex);
     if (sheet && sheet.open) closeDialog(sheet);
     doc.classList.remove("i18n-pending");

@@ -92,11 +92,17 @@
     <a class="m-link" href="#muhely">A műhely</a>
     <a class="m-link" href="#kapcsolat">Kapcsolat</a>
     <button class="btn" type="button" data-book>Időpontot kérek</button>
+    <svg class="mobile-nav__art" aria-hidden="true" focusable="false"><use href="#b-lavender"/></svg>
   </nav>
 
   <main id="main">
     <!-- ============ HERO ============ -->
     <section class="hero" aria-labelledby="hero-title">
+      <div class="leaves" aria-hidden="true">
+        <span class="leaf"><svg><use href="#i-leaf"/></svg></span>
+        <span class="leaf"><svg><use href="#i-petal"/></svg></span>
+        <span class="leaf"><svg><use href="#i-leaf"/></svg></span>
+      </div>
       <div class="wrap hero__grid">
         <div class="hero__copy">
           <button class="petal-trigger hero__logo" type="button" data-petals aria-label="Esszencia logó – kattints egy kis szirom-esőért">
@@ -109,17 +115,24 @@
             <a class="btn btn--line" href="#kezelesek">Kezelések &amp; árak</a>
           </div>
         </div>
-        <figure class="hero__photo">
-          <img src="assets/img/room-wide-1400.webp"
-               srcset="assets/img/room-wide-800.webp 800w, assets/img/room-wide-1400.webp 1400w, assets/img/room-wide-2000.webp 2000w"
-               sizes="(max-width: 900px) 100vw, 52vw" width="1400" height="1045" fetchpriority="high"
-               alt="A kezelőszoba fonott lámpával, pálmamintás tapétával, tükörrel és kezelőággyal">
+        <div class="hero__visual">
+          <div class="hero__photo">
+            <img src="assets/img/room-wide-1400.webp"
+                 srcset="assets/img/room-wide-800.webp 800w, assets/img/room-wide-1400.webp 1400w, assets/img/room-wide-2000.webp 2000w"
+                 sizes="(max-width: 900px) 100vw, 52vw" width="1400" height="1045" fetchpriority="high"
+                 alt="A kezelőszoba fonott lámpával, pálmamintás tapétával, tükörrel és kezelőággyal">
+          </div>
+          <figure class="mount hero__inset">
+            <span class="tape" aria-hidden="true"></span>
+            <img src="assets/img/sage-700.webp" width="700" height="933" alt="Frissen szedett zsályalevelek">
+            <figcaption><span>Fig. 01</span><span class="latin">Salvia officinalis</span></figcaption>
+          </figure>
           <dl class="info-card" aria-label="Röviden">
             <div><dt>Hely</dt><dd>Sénye, Haladás u. 2.</dd></div>
             <div><dt data-i18n-key="@visit">Időpont</dt><dd>egyeztetéssel</dd></div>
             <div><dt>Nyelv</dt><dd>magyar · svéd · kis angol</dd></div>
           </dl>
-        </figure>
+        </div>
       </div>
     </section>
 
@@ -138,13 +151,34 @@
       </div>
     </section>
 
+    <!-- ============ SÉANCE RITUAL ============ -->
+    <section class="section section--forest has-deco" id="seance" aria-labelledby="ritual-title">
+      <svg class="deco deco--br" aria-hidden="true" focusable="false"><use href="#b-chamomile"/></svg>
+      <div class="wrap">
+        <header class="section-head section-head--center">
+          <p class="label">A Séance-élmény</p>
+          <h2 class="title" id="ritual-title">Egy óra, <span class="latin">csak neked</span></h2>
+          <p class="lede">A Séance-kezelések az aromaterápiát és a hatékony bőrápolást ötvözik – kozmetikai eredmény és wellness-élmény egyszerre.</p>
+        </header>
+        <ol class="ritual">
+          <li><span class="ritual__n">i</span><div><h3>Az illat</h3><p>Minden kezelésnek saját illata van, ami segít megérkezni és ellazulni.</p></div></li>
+          <li><span class="ritual__n">ii</span><div><h3>Letisztítás</h3><p>Kíméletes sminklemosás és tisztítás, hogy a bőr befogadja a hatóanyagokat.</p></div></li>
+          <li><span class="ritual__n">iii</span><div><h3>A kezelés szíve</h3><p>Tonizálás, hámlasztás, masszázs és pakolás – a bőröd igényei szerint.</p></div></li>
+          <li><span class="ritual__n">iv</span><div><h3>Célzott extrák</h3><p>Szükség esetén kiegészítő ápolás, például a szemkörnyékre vagy pigmentfoltokra.</p></div></li>
+          <li><span class="ritual__n">v</span><div><h3>Befejezés</h3><p>Záró krém és személyre szabott tanács az otthoni ápoláshoz.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
     <!-- ============ ABOUT ============ -->
     <section class="section has-deco" id="rolam" aria-labelledby="about-title">
       <svg class="deco deco--bl" aria-hidden="true" focusable="false"><use href="#b-rosehip"/></svg>
       <div class="wrap about">
-        <figure class="photo about__photo">
-          <img src="assets/img/treatment-700.webp" srcset="assets/img/treatment-700.webp 700w, assets/img/treatment-1200.webp 1200w" sizes="(max-width: 900px) 90vw, 420px"
+        <figure class="mount mount--tilt-r about__photo">
+          <span class="tape" aria-hidden="true"></span>
+          <img src="assets/img/treatment-700.webp" srcset="assets/img/treatment-700.webp 700w, assets/img/treatment-1200.webp 1200w" sizes="(max-width: 900px) 80vw, 400px"
                width="700" height="938" loading="lazy" decoding="async" alt="Arckezelés közben: a vendég csukott szemmel pihen a kezelőágyon">
+          <figcaption><span>Fig. 02 — Kezelés</span><span class="latin">cura faciei</span></figcaption>
         </figure>
         <div>
           <p class="label">Bemutatkozás</p>
@@ -173,43 +207,74 @@
             <p class="label">Termékeink</p>
             <h2 class="title" id="products-title">Magister Products <span class="latin">· Séance</span></h2>
             <p class="lede">Kezeléseimhez a magyar Magister Products professzionális Séance termékcsaládját használom. A márka biológiai szemléletű: természetes összetevőkre, növényi kivonatokra és parabénmentes formulákra épít.</p>
-            <p>Egy Séance-kezelés körülbelül egy óra: saját illattal kezdődik, majd letisztítás, tonizálás, hámlasztás, masszázs és pakolás következik – a végén pedig személyre szabott tanácsot kapsz az otthoni ápoláshoz.</p>
             <ul class="facts" aria-label="A márka jellemzői">
               <li>Magyar márka</li><li>Biológiai szemlélet</li><li>Parabénmentes</li><li>Szalonban és otthon</li>
             </ul>
             <a class="text-link" href="https://www.seance.hu/" target="_blank" rel="noopener">A márka hivatalos oldala <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
           </div>
-          <figure class="photo">
-            <img src="assets/img/products-seance-700.webp" srcset="assets/img/products-seance-700.webp 700w, assets/img/products-seance-1200.webp 1200w" sizes="(max-width: 900px) 90vw, 40vw"
-                 width="700" height="938" loading="lazy" decoding="async" alt="Séance termékek kék üvegekben, pálmalevelek előtt">
-          </figure>
+          <div class="collage">
+            <figure class="mount collage__a">
+              <img src="assets/img/products-seance-700.webp" srcset="assets/img/products-seance-700.webp 700w, assets/img/products-seance-1200.webp 1200w" sizes="(max-width: 900px) 56vw, 26vw"
+                   width="700" height="938" loading="lazy" decoding="async" alt="Séance termékek kék üvegekben, pálmalevelek előtt">
+              <figcaption><span>Fig. 03</span><span class="latin">Séance</span></figcaption>
+            </figure>
+            <figure class="mount mount--tilt-r collage__b">
+              <span class="tape" aria-hidden="true"></span>
+              <img src="assets/img/products-magister-700.webp" srcset="assets/img/products-magister-700.webp 700w, assets/img/products-magister-1200.webp 1200w" sizes="(max-width: 900px) 44vw, 20vw"
+                   width="700" height="938" loading="lazy" decoding="async" alt="Magister arctisztító habok, krémek és radír">
+              <figcaption><span>Fig. 04</span><span class="latin">Magister</span></figcaption>
+            </figure>
+          </div>
         </div>
-        <ul class="product-list" aria-label="Termékek">
+        <ul class="product-list" id="product-list" aria-label="Termékek">
           <li><h3>Kókuszvizes micellás arctisztító</h3><p>Gyengéd, mindennapos tisztítás – a Séance-kezelések első lépése is.</p></li>
           <li><h3>Siciliano arctisztító hab</h3><p>Citrusos frissességű, könnyű hab az alapos, mégis kíméletes tisztításhoz.</p></li>
-          <li><h3>Tropiscrub arcradír</h3><p>Trópusi hangulatú radír a puhább, simább bőrfelszínért.</p></li>
           <li><h3>Moroccorange Hyaluro Jelly</h3><p>Hialuronos zselé a Moroccan Rituals sorozatból, üdítő hidratálásért.</p></li>
-          <li><h3>Bamboo Lagoon masszázsbalzsam</h3><p>Peptidekkel gazdagított balzsam a kezelések relaxáló arcmasszázsához.</p></li>
           <li><h3>Voyage 3D Hyaluron-C</h3><p>Prémium nappali arckrém 45+ bőrre, hialuronnal és C-vitaminnal.</p></li>
-          <li><h3>Szőlős hialuron nappali krém</h3><p>Könnyű, mindennapos nappali ápolás szőlővel és hialuronnal.</p></li>
-          <li><h3>Intimity illatcseppek</h3><p>Párologtatható illatkeverékek – ezekkel indul minden Séance-kezelés.</p></li>
+          <li class="is-extra"><h3>Tropiscrub arcradír</h3><p>Trópusi hangulatú radír a puhább, simább bőrfelszínért.</p></li>
+          <li class="is-extra"><h3>Bamboo Lagoon masszázsbalzsam</h3><p>Peptidekkel gazdagított balzsam a kezelések relaxáló arcmasszázsához.</p></li>
+          <li class="is-extra"><h3>Szőlős hialuron nappali krém</h3><p>Könnyű, mindennapos nappali ápolás szőlővel és hialuronnal.</p></li>
+          <li class="is-extra"><h3>Intimity illatcseppek</h3><p>Párologtatható illatkeverékek – ezekkel indul minden Séance-kezelés.</p></li>
         </ul>
+        <button class="show-more" type="button" data-more="#product-list" aria-controls="product-list" aria-expanded="false"><span>Mutasd mind a 8 terméket</span><svg aria-hidden="true"><use href="#i-chevron"/></svg></button>
         <p class="products-note">A szalonban használt termékek otthonra is elérhetők. Kérdezz bátran – segítek kiválasztani, ami a bőrödnek a legjobb.</p>
       </div>
     </section>
 
-    <!-- ============ GALLERY ============ -->
-    <section class="section" id="muhely" aria-labelledby="gallery-title">
+    <!-- ============ PLANTS ============ -->
+    <section class="section section--tight" aria-labelledby="plants-title">
       <div class="wrap">
-        <header class="section-head">
-          <p class="label">A műhely</p>
-          <h2 class="title" id="gallery-title">Egy kis zöld <span class="latin">menedék</span></h2>
+        <header class="section-head section-head--row">
+          <div>
+            <p class="label">Herbárium</p>
+            <h2 class="title" id="plants-title">A műhely <span class="latin">növényei</span></h2>
+          </div>
+          <p class="swipe-hint" aria-hidden="true">Húzd oldalra <svg><use href="#i-arrow"/></svg></p>
+        </header>
+        <ul class="plates" aria-label="A műhely növényei">
+          <li class="plate"><svg class="plate__art" aria-hidden="true" focusable="false"><use href="#b-rosehip"/></svg><h3>Csipkebogyó</h3><p class="latin">Rosa canina</p><p>Magjából regeneráló, tápláló olaj készül.</p></li>
+          <li class="plate"><svg class="plate__art" aria-hidden="true" focusable="false"><use href="#b-lavender"/></svg><h3>Levendula</h3><p class="latin">Lavandula angustifolia</p><p>Nyugtató illat, kiegyensúlyozó érintés.</p></li>
+          <li class="plate"><svg class="plate__art" aria-hidden="true" focusable="false"><use href="#b-chamomile"/></svg><h3>Kamilla</h3><p class="latin">Matricaria chamomilla</p><p>Gyengéd, bőrnyugtató klasszikus.</p></li>
+          <li class="plate"><svg class="plate__art" aria-hidden="true" focusable="false"><use href="#b-calendula"/></svg><h3>Körömvirág</h3><p class="latin">Calendula officinalis</p><p>Az érzékeny, igénybe vett bőr barátja.</p></li>
+          <li class="plate"><svg class="plate__art" aria-hidden="true" focusable="false"><use href="#b-sage"/></svg><h3>Zsálya</h3><p class="latin">Salvia officinalis</p><p>Tisztító, összehúzó, frissítő.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY ============ -->
+    <section class="section section--sage" id="muhely" aria-labelledby="gallery-title">
+      <div class="wrap">
+        <header class="section-head section-head--row">
+          <div>
+            <p class="label">A műhely</p>
+            <h2 class="title" id="gallery-title">Egy kis zöld <span class="latin">menedék</span></h2>
+          </div>
+          <p class="gallery-count" aria-hidden="true"><span data-gallery-pos>1</span> / <span data-gallery-total>5</span></p>
         </header>
         <ul class="gallery" data-gallery>
-          <li><button type="button" data-full="assets/img/room-love-1400.webp" data-caption="Kezelésre készen"><img src="assets/img/room-love-800.webp" width="800" height="447" loading="lazy" decoding="async" alt="Kezelőágy szemből, mögötte LOVE feliratos polc"></button><p>Kezelésre készen</p></li>
+          <li class="g-big"><button type="button" data-full="assets/img/room-love-1400.webp" data-caption="Kezelésre készen"><img src="assets/img/room-love-800.webp" srcset="assets/img/room-love-800.webp 800w, assets/img/room-love-1400.webp 1400w" sizes="(max-width: 760px) 84vw, 50vw" width="800" height="447" loading="lazy" decoding="async" alt="Kezelőágy szemből, mögötte LOVE feliratos polc"></button><p>Kezelésre készen</p></li>
           <li><button type="button" data-full="assets/img/lounge-bench-1400.webp" data-caption="Pihenősarok"><img src="assets/img/lounge-bench-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Pihenősarok bárányszőrös paddal, mintás párnákkal és zöld asztallal"></button><p>Pihenősarok</p></li>
           <li><button type="button" data-full="assets/img/garden-buddha-1400.webp" data-caption="A kert"><img src="assets/img/garden-buddha-800.webp" width="800" height="537" loading="lazy" decoding="async" alt="Ülő Buddha-szobor a sziklakertben"></button><p>A kert</p></li>
-          <li><button type="button" data-full="assets/img/bed-towels-1400.webp" data-caption="Puha takarók"><img src="assets/img/bed-towels-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Kezelőágy zöld pléddel és összehajtott törölközőkkel"></button><p>Puha takarók</p></li>
           <li><button type="button" data-full="assets/img/oils-1400.webp" data-caption="Illóolajok"><img src="assets/img/oils-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Illóolajos üvegcsék egy fonott kosár és pálmalevelek előtt"></button><p>Illóolajok</p></li>
           <li><button type="button" data-full="assets/img/bouquet-1400.webp" data-caption="Őszi csokor"><img src="assets/img/bouquet-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Őszi virágcsokor levendulával és piros levelekkel"></button><p>Őszi csokor</p></li>
         </ul>
@@ -217,7 +282,7 @@
     </section>
 
     <!-- ============ CONTACT ============ -->
-    <section class="section section--sage has-deco" id="kapcsolat" aria-labelledby="contact-title">
+    <section class="section has-deco" id="kapcsolat" aria-labelledby="contact-title">
       <svg class="deco deco--br" aria-hidden="true" focusable="false"><use href="#b-lavender"/></svg>
       <div class="wrap contact">
         <div>
@@ -237,9 +302,11 @@
           </div>
         </div>
         <aside class="contact-aside" aria-label="Útvonal">
-          <figure class="photo">
-            <img src="assets/img/hero-house-720.webp" srcset="assets/img/hero-house-720.webp 720w, assets/img/hero-house-1200.webp 1200w" sizes="(max-width: 900px) 90vw, 40vw"
+          <figure class="mount mount--tilt-l">
+            <span class="tape" aria-hidden="true"></span>
+            <img src="assets/img/hero-house-720.webp" srcset="assets/img/hero-house-720.webp 720w, assets/img/hero-house-1200.webp 1200w" sizes="(max-width: 900px) 86vw, 40vw"
                  width="720" height="964" loading="lazy" decoding="async" alt="A szépségműhely fehér háza virágzó almafával">
+            <figcaption><span>Fig. 05 — Itt találsz meg</span><span class="latin">Sénye</span></figcaption>
           </figure>
           <p>Sénye csendes utcájában, egy kertes házban vár a műhely.</p>
           <div class="map-links">

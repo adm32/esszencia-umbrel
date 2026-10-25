@@ -219,7 +219,6 @@ html.i18n-pending body { opacity: 0; }
 
 /* ---------- About ---------- */
 .about { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(32px, 6vw, 80px); align-items: center; }
-.about__photo img { aspect-ratio: 3 / 4; max-height: 560px; }
 .quote { margin: 0 0 28px; font-size: 1.15em; line-height: 1.6; color: var(--pine); }
 .quote p { margin-bottom: 10px; }
 .quote footer { font-size: .9rem; color: var(--moss); font-weight: 500; }
@@ -231,13 +230,11 @@ html.i18n-pending body { opacity: 0; }
 .season-card p:last-child { margin: 0; font-size: .92rem; color: var(--text-soft); }
 @media (max-width: 900px) {
   .about { grid-template-columns: 1fr; }
-  .about__photo { width: min(78%, 360px); margin: 0 auto; }
 }
 @media (max-width: 460px) { .season-card { grid-template-columns: 72px 1fr; } .season-card img { width: 72px; height: 72px; } }
 
 /* ---------- Products ---------- */
 .products-intro { display: grid; grid-template-columns: 1.2fr .8fr; gap: clamp(32px, 6vw, 80px); align-items: center; margin-bottom: clamp(36px, 5vw, 56px); }
-.products-intro .photo img { aspect-ratio: 4 / 5; max-height: 520px; }
 .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 22px; }
 .facts li { padding: 6px 14px; border-radius: 99px; background: var(--sage-100); color: var(--pine); font-size: .9rem; }
 .product-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; border-top: 1px solid var(--line); }
@@ -247,18 +244,10 @@ html.i18n-pending body { opacity: 0; }
 .products-note { margin: 22px 0 0; color: var(--forest); }
 @media (max-width: 900px) {
   .products-intro { grid-template-columns: 1fr; }
-  .products-intro .photo { order: -1; width: min(78%, 360px); margin: 0 auto; }
   .product-list { grid-template-columns: 1fr; }
 }
 
-/* ---------- Gallery ---------- */
-.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.gallery button { display: block; width: 100%; padding: 0; border: 0; border-radius: var(--radius); overflow: hidden; background: var(--sage-100); cursor: zoom-in; }
-.gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform .6s var(--ease); }
-.gallery button:hover img { transform: scale(1.03); }
-.gallery p { margin: 8px 0 0; font-size: .9rem; color: var(--text-soft); }
-@media (max-width: 760px) { .gallery { grid-template-columns: 1fr 1fr; gap: 12px; } .gallery p { font-size: .85rem; } }
-
+/* ---------- Gallery (see v1.2 block) ---------- */
 .lightbox { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(31, 48, 43, .96); color: var(--cream); }
 .lightbox[open] { display: grid; place-items: center; }
 .lightbox figure { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 70px 16px; }
@@ -281,7 +270,6 @@ html.i18n-pending body { opacity: 0; }
 .contact-lines a { display: inline-block; padding: 4px 0; margin: -4px 0; }
 .contact-lines a:hover { text-decoration: underline; text-underline-offset: 5px; }
 .contact-lines .big { font-size: 1.45rem; font-weight: 500; color: var(--forest); }
-.contact-aside .photo img { aspect-ratio: 4 / 3; object-position: 50% 62%; }
 .contact-aside p { margin: 14px 0; color: var(--text-soft); }
 .map-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .map-links a { display: inline-flex; align-items: center; min-height: 46px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: var(--radius); color: var(--forest); font-weight: 500; text-decoration: none; }
@@ -341,3 +329,168 @@ html.i18n-pending body { opacity: 0; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 @media print { .site-header, .action-bar, .lightbox, .sheet, .deco { display: none !important; } body { background: #fff; } }
+
+/* ==========================================================================
+   v1.2 — refined herbarium details, livelier photos, phone-first polish
+   ========================================================================== */
+
+/* Mounted photos ("herbarium sheets") */
+.mount { position: relative; margin: 0; padding: 10px 10px 8px; background: var(--sheet); border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -24px rgba(31, 48, 43, .55); }
+.mount img { width: 100%; border-radius: 2px; object-fit: cover; }
+.mount figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-top: 8px; font-size: .72rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--moss); }
+.mount figcaption .latin { text-transform: none; letter-spacing: 0; font-size: .95rem; font-weight: 400; }
+.mount--tilt-r { transform: rotate(1.4deg); }
+.mount--tilt-l { transform: rotate(-1.4deg); }
+.tape { position: absolute; top: -10px; left: 50%; z-index: 2; width: 74px; height: 22px; transform: translateX(-50%) rotate(-3deg); background: rgba(189, 198, 185, .7); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+/* Hero collage */
+.hero { position: relative; overflow: hidden; }
+.hero__visual { position: relative; }
+.hero__photo img { width: 100%; aspect-ratio: 4 / 3.3; object-fit: cover; border-radius: var(--radius); }
+.hero__inset { position: absolute; right: -18px; bottom: -34px; z-index: 2; width: 30%; max-width: 190px; transform: rotate(4deg); }
+.hero__inset img { aspect-ratio: 3 / 3.6; }
+.hero__inset figcaption { font-size: .62rem; }
+.hero__inset figcaption .latin { font-size: .78rem; }
+
+/* Drifting leaves – desktop only, very slow */
+.leaves { display: none; }
+@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+  .leaves { display: block; position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .leaf { position: absolute; top: -30px; width: 18px; height: 18px; color: var(--sage-500); opacity: 0; animation: leaf-fall linear infinite; }
+  .leaf svg { width: 100%; height: 100%; animation: leaf-sway 3.4s ease-in-out infinite alternate; }
+  .leaf:nth-child(1) { left: 8%;  animation-duration: 26s; animation-delay: -4s; }
+  .leaf:nth-child(2) { left: 30%; animation-duration: 31s; animation-delay: -15s; width: 14px; height: 14px; }
+  .leaf:nth-child(3) { left: 44%; animation-duration: 28s; animation-delay: -9s; }
+  .leaves.is-paused .leaf, .leaves.is-paused .leaf svg { animation-play-state: paused; }
+}
+@keyframes leaf-fall { 0% { transform: translate3d(0,0,0) rotate(0); opacity: 0; } 10% { opacity: .35; } 85% { opacity: .25; } 100% { transform: translate3d(-50px, 105vh, 0) rotate(220deg); opacity: 0; } }
+@keyframes leaf-sway { from { transform: translateX(-14px) rotate(-16deg); } to { transform: translateX(14px) rotate(20deg); } }
+.hero > .wrap { position: relative; z-index: 1; }
+
+/* Forest band: the Séance ritual */
+.section--forest { background: var(--forest); color: var(--on-forest); }
+.section--forest .label { color: #C9D1C4; }
+.section--forest .title { color: var(--cream); }
+.section--forest .title .latin { color: var(--sage-300); }
+.section--forest .lede { color: var(--on-forest); }
+.section--forest .deco { color: var(--cream); opacity: .08; }
+.section-head--center { text-align: center; }
+.section-head--center .lede { margin-inline: auto; }
+.section-head--row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.section-head--row .title { margin-bottom: 0; }
+.ritual { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; counter-reset: r; }
+.ritual li { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid rgba(221, 226, 216, .28); }
+.ritual__n { font-family: var(--font-latin); font-style: italic; font-size: 2.1rem; line-height: 1; color: var(--sage-300); }
+.ritual h3 { font-size: 1.08rem; font-weight: 500; color: var(--cream); margin-bottom: 4px; }
+.ritual p { margin: 0; font-size: .95rem; color: var(--on-forest); }
+
+/* About photo */
+.about__photo { max-width: 400px; justify-self: center; }
+.about__photo img { aspect-ratio: 3 / 4; }
+
+/* Product collage */
+.collage { position: relative; padding: 0 0 18% 0; }
+.collage__a { width: 68%; }
+.collage__a img { aspect-ratio: 3 / 4; }
+.collage__b { position: absolute; right: 0; bottom: 0; width: 46%; }
+.collage__b img { aspect-ratio: 3 / 4; }
+.show-more { display: none; }
+
+/* Plant plates */
+.section--tight { padding: clamp(48px, 6vw, 80px) 0; }
+.swipe-hint { display: none; }
+.plates { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.plate { padding: 22px 16px 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; background: var(--cream); transition: background .3s; }
+.plate:hover { background: var(--sheet); }
+.plate__art { display: block; width: 100%; max-width: 120px; aspect-ratio: 170 / 240; margin: 0 auto 12px; color: var(--forest); transform-origin: 50% 100%; transition: transform 1s var(--ease); }
+.plate:hover .plate__art { transform: rotate(-3deg); }
+.plate h3 { font-size: 1.08rem; font-weight: 500; color: var(--pine); }
+.plate .latin { margin: 0 0 6px; color: var(--moss); }
+.plate p:last-child { margin: 0; font-size: .9rem; color: var(--text-soft); line-height: 1.5; }
+
+/* Gallery mosaic */
+.gallery-count { display: none; }
+.gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.gallery li { position: relative; }
+.gallery .g-big { grid-column: span 2; grid-row: span 2; }
+.gallery button { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: var(--radius); overflow: hidden; background: var(--sage-300); cursor: zoom-in; }
+.gallery img { width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform .7s var(--ease); }
+.gallery .g-big img { aspect-ratio: auto; }
+.gallery button:hover img { transform: scale(1.04); }
+.gallery p { position: absolute; left: 10px; bottom: 10px; margin: 0; padding: 4px 12px; border-radius: 99px; background: rgba(247, 245, 234, .92); color: var(--pine); font-size: .85rem; pointer-events: none; }
+
+/* Contact photo */
+.contact-aside .mount img { aspect-ratio: 4 / 3; object-position: 50% 62%; }
+.contact-aside .mount { margin-bottom: 18px; }
+
+/* Mobile menu art */
+.mobile-nav__art { display: block; width: 120px; aspect-ratio: 170 / 240; margin: 30px auto 0; color: var(--forest); opacity: .18; }
+
+/* ---------- Tablet ---------- */
+@media (max-width: 900px) {
+  .ritual { grid-template-columns: 1fr 1fr; }
+  .hero__inset { right: 4px; bottom: auto; top: -22px; width: 26%; transform: rotate(5deg); }
+  .collage { width: min(100%, 460px); margin: 0 auto; }
+  .products-intro .collage { order: -1; }
+  .about__photo { width: min(76%, 340px); }
+  .plates { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 760px) {
+  :root { --section: 52px; }
+  .title { font-size: 2rem; }
+  .section-head { margin-bottom: 24px; }
+
+  /* hero: compact, info below the photo instead of on it */
+  .hero { padding-top: calc(var(--header-h) + 18px); padding-bottom: 36px; }
+  .hero__logo { width: min(48%, 190px); margin-bottom: 18px; }
+  .hero h1 { font-size: 1.65rem; }
+  .hero .lede { font-size: 1rem; margin-bottom: 22px; }
+  .hero__visual { margin-top: 26px; }
+  .hero__photo img { aspect-ratio: 4 / 3; }
+  .hero__inset { width: 30%; top: -16px; right: -4px; padding: 6px 6px 4px; }
+  .hero__inset figcaption { display: none; }
+  .info-card { position: static; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; padding: 12px 14px; box-shadow: none; border: 1px solid var(--line); }
+  .info-card div { flex-direction: column; gap: 2px; padding: 0; }
+  .info-card dt { font-size: .78rem; }
+  .info-card dd { text-align: left; font-size: .86rem; line-height: 1.35; }
+
+  /* ritual as a quiet timeline */
+  .ritual { grid-template-columns: 1fr; gap: 0; position: relative; }
+  .ritual li { flex-direction: row; align-items: baseline; gap: 16px; padding: 14px 0; border-top: 0; border-bottom: 1px solid rgba(221, 226, 216, .2); }
+  .ritual li:last-child { border-bottom: 0; }
+  .ritual__n { width: 34px; flex: none; font-size: 1.6rem; text-align: center; }
+  .ritual h3 { font-size: 1.02rem; }
+  .ritual p { font-size: .92rem; }
+
+  /* photos: gentler tilt */
+  .mount--tilt-r { transform: rotate(.8deg); }
+  .mount--tilt-l { transform: rotate(-.8deg); }
+  .about__photo { width: min(80%, 320px); }
+
+  /* products: 4 visible + "show all" */
+  .collage { width: 92%; }
+  .product-list li.is-extra { display: none; }
+  .product-list.is-open li.is-extra { display: block; }
+  .show-more { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin-top: 14px; border: 1.5px solid var(--line); border-radius: var(--radius); background: transparent; color: var(--forest); font-weight: 500; }
+  .show-more svg { width: 18px; height: 18px; transition: transform .25s var(--ease); }
+  .show-more[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+  /* swipeable rows with a peek of the next card */
+  .section-head--row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .swipe-hint, .gallery-count { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: .85rem; color: var(--moss); white-space: nowrap; }
+  .swipe-hint { padding-right: 8px; }
+  .swipe-hint svg { width: 16px; height: 16px; animation: nudge 1.8s ease-in-out infinite; }
+  .plates, .gallery {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1); padding: 4px var(--gutter) 10px; scroll-padding-inline: var(--gutter); border: 0;
+  }
+  .plates::-webkit-scrollbar, .gallery::-webkit-scrollbar { display: none; }
+  .plate { flex: 0 0 62%; scroll-snap-align: start; border: 1px solid var(--line); border-radius: var(--radius); background: var(--sheet); }
+  .gallery li, .gallery .g-big { flex: 0 0 84%; scroll-snap-align: start; }
+  .gallery img, .gallery .g-big img { aspect-ratio: 4 / 3; height: auto; }
+  .gallery button { height: auto; }
+}
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { .swipe-hint svg { animation: none; } }

@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.1.1"
+version: "1.2.0"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -30,8 +30,9 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  Javítás: frissítés után a böngésző nem keverheti többé a régi stílust az új oldallal.
-  Stabilabb árlista régebbi iPhone/iPad Safari böngészőkön.
+  Visszatértek a herbárium-részletek letisztultabb formában: felragasztott fotók, Séance-szertartás,
+  a műhely növényei. Élénkebb képek (kollázs, mozaik galéria). Telefonon: lapozható galéria
+  és növénykártyák, rövidebb terméklista, nyugodt, áttekinthető elrendezés.
 dependencies: []
 path: ""
 defaultUsername: ""
