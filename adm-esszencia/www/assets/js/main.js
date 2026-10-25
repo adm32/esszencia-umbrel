@@ -249,8 +249,8 @@
     cats.forEach(function (c, i) {
       var name = L(c.name), intro = L(c.intro), note = L(c.note);
       html += '<details class="acc" data-cat="' + i + '"' + (openCats[i] ? ' open' : '') + '>' +
-        '<summary><span class="acc__title">' + esc(name) + '</span><span class="acc__meta">' + esc(metaText(c)) + '</span>' +
-        '<span class="acc__chev" aria-hidden="true"><svg><use href="#i-chevron"/></svg></span></summary>' +
+        '<summary><span class="acc__row"><span class="acc__title">' + esc(name) + '</span><span class="acc__meta">' + esc(metaText(c)) + '</span>' +
+        '<span class="acc__chev" aria-hidden="true"><svg><use href="#i-chevron"/></svg></span></span></summary>' +
         '<div class="acc__body">' +
         (intro ? (intro.length > 220
           ? '<div class="acc__intro is-long"><p id="intro-' + i + '">' + esc(intro) + '</p><button type="button" class="more-btn" aria-expanded="false" aria-controls="intro-' + i + '">' + esc(T("Tovább olvasom")) + '</button></div>'

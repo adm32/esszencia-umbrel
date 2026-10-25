@@ -182,7 +182,8 @@ html.i18n-pending body { opacity: 0; }
 .services-intro { margin: -8px 0 22px; color: var(--moss); font-weight: 500; }
 .acc { border-top: 1px solid var(--line); }
 .acc:last-of-type { border-bottom: 1px solid var(--line); }
-.acc summary { display: flex; align-items: center; gap: 16px; padding: 20px 4px; cursor: pointer; list-style: none; }
+.acc summary { display: block; padding: 20px 4px; cursor: pointer; list-style: none; }
+.acc__row { display: flex; align-items: center; gap: 16px; }
 .acc summary::-webkit-details-marker { display: none; }
 .acc summary:hover .acc__title { color: var(--forest); }
 .acc__title { flex: 1; font-size: 1.25rem; color: var(--pine); }
@@ -209,7 +210,7 @@ html.i18n-pending body { opacity: 0; }
 .services-note { margin: 18px 4px 0; font-size: .9rem; color: var(--text-soft); }
 @media (max-width: 760px) {
   .svc-list--two { grid-template-columns: 1fr; }
-  .acc summary { flex-wrap: wrap; row-gap: 2px; }
+  .acc__row { flex-wrap: wrap; row-gap: 2px; }
   .acc__title { flex: 1 1 70%; font-size: 1.15rem; }
   .acc__meta { order: 3; flex-basis: 100%; }
   .acc__chev { order: 2; }
