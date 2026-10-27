@@ -48,8 +48,8 @@ window.ESSZENCIA_SERVICES = {
       },
       items: [
         { name: { hu: "Alap nagykezelés – arc", en: "Deep-cleansing facial – face", de: "Tiefenreinigung – Gesicht", sv: "Djuprengöring – ansikte" }, duration: "~60 perc", price: "10 500 Ft" },
-        { name: { hu: "Alap nagykezelés – arc + dekoltázs", en: "Deep-cleansing facial – face + décolleté", de: "Tiefenreinigung – Gesicht + Dekolleté", sv: "Djuprengöring – ansikte + dekolletage" }, duration: "~75 perc", price: "13 500 Ft" },
-        { name: { hu: "Alap nagykezelés – arc + dekoltázs + gépi hatóanyagbevitel", en: "Deep-cleansing facial – face + décolleté + device-assisted infusion", de: "Tiefenreinigung – Gesicht + Dekolleté + apparative Wirkstoffeinschleusung", sv: "Djuprengöring – ansikte + dekolletage + maskinell inslussning" }, duration: "~90 perc", price: "15 500 Ft" }
+        { name: { hu: "Alap nagykezelés – arc + dekoltázs", en: "Deep-cleansing facial – face + décolleté", de: "Tiefenreinigung – Gesicht + Dekolleté", sv: "Djuprengöring – ansikte + dekolletage" }, duration: "~75 perc", price: "12 500 Ft" },
+        { name: { hu: "Alap nagykezelés – arc + dekoltázs + gépi hatóanyagbevitel", en: "Deep-cleansing facial – face + décolleté + device-assisted infusion", de: "Tiefenreinigung – Gesicht + Dekolleté + apparative Wirkstoffeinschleusung", sv: "Djuprengöring – ansikte + dekolletage + maskinell inslussning" }, duration: "~90 perc", price: "14 500 Ft" }
       ]
     },
     {
@@ -86,7 +86,7 @@ window.ESSZENCIA_SERVICES = {
             de: "Fußbad mit Meersalz und ätherischen Ölen, Einreibung der Fußsohlen mit Aromaöl, Mobilisation von Rücken und Schultern, fasziale Gesichtstherapie, Face-Sculpting-Massage mit Wirkstoffeinschleusung, straffende Gesichtsmaske, Craniosacral-Therapie.",
             sv: "Fotbad med havssalt och eteriska oljor, aromaoljemassage av fotsulorna, mobilisering av rygg och axlar, fascial ansiktsterapi, ansiktsskulpterande massage med aktiva ämnen, uppstramande ansiktsmask, kraniosakral terapi."
           },
-          duration: "~180 perc", price: "18 000 Ft",
+          duration: { hu: "~2,5–3 óra", en: "~2.5–3 hours", de: "~2,5–3 Std.", sv: "~2,5–3 tim" }, minutes: 180, price: "19 000 Ft",
           tag: { hu: "Teljes kikapcsolódás", en: "Total unwind", de: "Pure Entspannung", sv: "Total avkoppling" } }
       ]
     },

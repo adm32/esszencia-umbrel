@@ -336,7 +336,7 @@
   $$("[data-more]").forEach(function (btn) {
     var list = $(btn.getAttribute("data-more"));
     var label = $("span", btn);
-    var setLabel = function () { label.textContent = T(list.classList.contains("is-open") ? "Kevesebb" : "Mutasd mind a 8 terméket"); };
+    var setLabel = function () { label.textContent = T(list.classList.contains("is-open") ? "Kevesebb" : "Mutasd mind a 6 terméket"); };
     btn.addEventListener("click", function () {
       var open = list.classList.toggle("is-open");
       btn.setAttribute("aria-expanded", String(open));

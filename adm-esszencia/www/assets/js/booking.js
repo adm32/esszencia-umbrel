@@ -75,7 +75,15 @@
     close: ["Bezárás", "Close", "Schließen", "Stäng"],
     customName: ["Egyedi kérés", "Special request", "Besonderer Wunsch", "Särskild önskan"],
     hoursClosed: ["zárva", "closed", "geschlossen", "stängt"],
-    online: ["online foglalás", "book online", "online buchen", "boka online"]
+    online: ["online foglalás", "book online", "online buchen", "boka online"],
+    soonest: ["Legközelebbi szabad időpontok", "Next free times", "Nächste freie Termine", "Närmaste lediga tider"],
+    orCal: ["…vagy válassz napot a naptárban:", "…or pick a day in the calendar:", "…oder wählen Sie einen Tag im Kalender:", "…eller välj en dag i kalendern:"],
+    today: ["Ma", "Today", "Heute", "I dag"],
+    tomorrow: ["Holnap", "Tomorrow", "Morgen", "I morgon"],
+    chosen: ["Kiválasztva:", "Selected:", "Ausgewählt:", "Vald tid:"],
+    lPrice: ["Ár", "Price", "Preis", "Pris"],
+    tapItem: ["Koppints a kezelésre a folytatáshoz.", "Tap a treatment to continue.", "Tippen Sie auf eine Behandlung, um fortzufahren.", "Tryck på en behandling för att fortsätta."],
+    legal: ["A küldéssel hozzájárulsz, hogy az adataidat az időpont egyeztetéséhez felhasználjam. Egy év után törlöm őket.", "By sending, you agree that I may use your details to arrange the appointment. They are deleted after a year.", "Mit dem Absenden stimmen Sie zu, dass ich Ihre Daten zur Terminvereinbarung verwende. Sie werden nach einem Jahr gelöscht.", "Genom att skicka godkänner du att jag använder dina uppgifter för att boka tiden. De raderas efter ett år."]
   };
   var IDX = { hu: 0, en: 1, de: 2, sv: 3 };
   var lang = function () { return E.lang(); };
@@ -94,7 +102,7 @@
   function priceNum(v) { var m = /\d[\d\s]*/.exec(L(v) || ""); return m ? parseInt(m[0].replace(/\s/g, ""), 10) : null; }
   function minutesOf(item, cat) {
     var nums = (L(item && item.duration) || "").match(/\d+/g);
-    var n = nums ? Math.max.apply(null, nums.map(Number)) : (cat && cat.minutes) || 60;
+    var n = item && item.minutes ? item.minutes : nums ? Math.max.apply(null, nums.map(Number)) : (cat && cat.minutes) || 60;
     for (var i = 0; i < PUBLIC_MINUTES.length; i++) if (n <= PUBLIC_MINUTES[i]) return PUBLIC_MINUTES[i];
     return 180;
   }
@@ -103,10 +111,8 @@
   var DAY = 86400000;
   var toUTC = function (d) { var p = d.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]); };
   var iso = function (ms) { return new Date(ms).toISOString().slice(0, 10); };
-  function fmt(d, opts) {
-    var s = new Intl.DateTimeFormat(LOCALE[lang()], Object.assign({ timeZone: "UTC" }, opts)).format(new Date(toUTC(d)));
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
+  function fmtRaw(d, opts) { return new Intl.DateTimeFormat(LOCALE[lang()], Object.assign({ timeZone: "UTC" }, opts)).format(new Date(toUTC(d))); }
+  function fmt(d, opts) { var s = fmtRaw(d, opts); return s.charAt(0).toUpperCase() + s.slice(1); }
   var fmtLong = function (d) { return fmt(d, { weekday: "long", month: "long", day: "numeric" }); };
   var monthOf = function (d) { return d.slice(0, 7) + "-01"; };
   function addMonths(m, n) { var p = m.split("-"); var dt = new Date(Date.UTC(+p[0], +p[1] - 1 + n, 1)); return iso(dt.getTime()); }
@@ -139,6 +145,15 @@
   // anonymous funnel statistics (stats.js) – each step counted once per opening
   function stat(e) { if (!st || (st.tr = st.tr || {})[e]) return; st.tr[e] = 1; try { if (window.EsszStats) window.EsszStats.track(e); } catch (x) {} }
   var minutes = function () { return st.custom || st.item == null ? 60 : minutesOf(cats[st.cat].items[st.item], cats[st.cat]); };
+  var curItem = function () { return st.custom || st.item == null ? null : cats[st.cat].items[st.item]; };
+  function durText() { var it = curItem(); var d = it && L(it.duration); return d ? d.replace(/perc/g, E.T("perc")) : tx("approx", { n: minutes() }); }
+  function priceText() { var it = curItem(); return it && L(it.price) ? E.T(L(it.price)) : ""; }
+  function relDay(d) {
+    if (!today) return "";
+    var diff = Math.round((toUTC(d) - toUTC(today)) / DAY);
+    return diff === 0 ? tx("today") : diff === 1 ? tx("tomorrow") : "";
+  }
+  function whenShort(d, t) { var r = relDay(d); return (r ? r + ", " + fmtRaw(d, { month: "short", day: "numeric" }) : fmt(d, { weekday: "long", month: "short", day: "numeric" })) + ", " + t; }
   function serviceNames() {
     if (st.custom || st.item == null) return { hu: "Egyedi kérés", local: tx("customName"), cat: "" };
     var c = cats[st.cat], it = c.items[st.item];
@@ -149,6 +164,7 @@
   /* ---------- elements ---------- */
   var $ = function (s) { return dlg.querySelector(s); };
   var body = $("[data-bk-body]"), next = $("[data-bk-next]"), back = $("[data-bk-back]"), bar = $("[data-bk-bar]");
+  var sel = $("[data-bk-sel]"), legal = $("[data-bk-legal]");
 
   /* ---------- rendering ---------- */
   function render() {
@@ -159,6 +175,7 @@
     $("[data-bk-steplabel]").textContent = st.done || st.offline ? "" : st.step + "/3 · " + labels[st.step - 1];
     bar.style.width = st.done ? "100%" : (st.offline ? "0" : (st.step / 3 * 100) + "%");
     back.hidden = st.done || st.offline || (st.step === 1 && st.cat == null && !st.custom);
+    sel.hidden = true; legal.hidden = true;
     if (st.offline) return renderOffline();
     if (st.done) return renderDone();
     if (st.step === 1) renderStep1();
@@ -207,15 +224,15 @@
         '<span class="bk-radio" aria-hidden="true"></span><span class="bk-item__name">' + esc(L(it.name)) +
         (dur ? "<small>" + esc(dur) + "</small>" : "") + '</span><span class="bk-item__price">' + esc(E.T(L(it.price))) + "</span></button></li>";
     });
-    h += "</ul>" +
-      '<label class="bk-field"><span>' + esc(tx("noteOpt")) + '</span><textarea data-note rows="2" maxlength="1000" placeholder="' + esc(tx("notePh")) + '">' + esc(st.note) + "</textarea></label>";
+    h += "</ul>" + (st.item == null ? '<p class="bk-hint">' + esc(tx("tapItem")) + "</p>" : "");
     body.innerHTML = h;
-    setNext(tx("next1"), st.item != null);
+    if (st.item == null) next.parentNode.hidden = true; else setNext(tx("next1"), true);
   }
 
   function summaryChip() {
     var s = serviceNames();
-    return '<div class="bk-chip"><span><b>' + esc(s.local) + "</b><small>" + esc(tx("approx", { n: minutes() })) + '</small></span>' +
+    var pr = priceText();
+    return '<div class="bk-chip"><span><b>' + esc(s.local) + "</b><small>" + esc(durText()) + (pr ? " · " + esc(pr) : "") + '</small></span>' +
       '<button type="button" class="bk-link" data-goto="1">' + esc(tx("change")) + "</button></div>";
   }
 
@@ -250,6 +267,14 @@
     st.autoNext = false;
     if (!st.date || !days[st.date]) { st.date = avail[0] || null; if (st.time && (!st.date || days[st.date].indexOf(st.time) < 0)) st.time = null; }
 
+    // One-tap shortcuts: the first free time of the next few days
+    var quick = avail.slice().sort().slice(0, 3).map(function (d) { return [d, days[d][0]]; });
+    if (quick.length) {
+      h += '<div class="bk-quick"><p class="bk-part">' + esc(tx("soonest")) + '</p><div class="bk-quick__list">' + quick.map(function (q) {
+        var on = q[0] === st.date && q[1] === st.time;
+        return '<button type="button" class="bk-quickbtn" data-quick="' + q[0] + "|" + q[1] + '" aria-pressed="' + on + '">' + esc(whenShort(q[0], q[1])) + "</button>";
+      }).join("") + '</div><p class="bk-part bk-part--or">' + esc(tx("orCal")) + "</p></div>";
+    }
     var canPrev = today && st.month > monthOf(today);
     var canNext = lastDay && addMonths(st.month, 1) <= lastDay;
     var title = fmt(st.month, { month: "long", year: "numeric" });
@@ -290,6 +315,12 @@
     h += '<p class="bk-hint">' + esc(tx("legend")) + " " + esc(tx("otherTime")) + ' <a href="' + PHONE_HREF + '">' + PHONE + "</a></p>";
     body.innerHTML = h;
     setNext(tx("next2"), !!(st.date && st.time));
+    showChosen();
+  }
+
+  function showChosen() {
+    if (st.step === 2 && st.date && st.time && !st.done) { sel.textContent = tx("chosen") + " " + whenShort(st.date, st.time); sel.hidden = false; }
+    else sel.hidden = true;
   }
 
   function summaryCard() {
@@ -297,7 +328,8 @@
     return '<dl class="bk-sum"><div><dt>' + esc(tx("lService")) + "</dt><dd>" + esc(s.local) + ' <button type="button" class="bk-link" data-goto="1">' + esc(tx("change")) + "</button></dd></div>" +
       "<div><dt>" + esc(tx("lWhen")) + "</dt><dd>" + esc(fmtLong(st.date)) + ", " + esc(st.time) + "–" + esc(endTime(st.time, minutes())) +
       ' <button type="button" class="bk-link" data-goto="2">' + esc(tx("change")) + "</button></dd></div>" +
-      "<div><dt>" + esc(tx("lDur")) + "</dt><dd>" + esc(tx("approx", { n: minutes() })) + "</dd></div></dl>";
+      "<div><dt>" + esc(tx("lDur")) + "</dt><dd>" + esc(durText()) + "</dd></div>" +
+      (priceText() ? "<div><dt>" + esc(tx("lPrice")) + "</dt><dd>" + esc(priceText()) + "</dd></div>" : "") + "</dl>";
   }
 
   function field(name, label, type, auto, hint) {
@@ -316,13 +348,11 @@
       field("email", tx("email"), "email", "email", tx("emailHint")) +
       '<label class="bk-field"><span>' + esc(st.custom ? tx("customLabel") : tx("noteOpt")) + '</span><textarea data-note rows="2" maxlength="1000" placeholder="' + esc(tx("notePh")) + '">' + esc(st.note) + "</textarea></label>" +
       '<input class="bk-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-      '<label class="bk-check' + (st.fieldErr.consent ? " has-err" : "") + '"><input type="checkbox" name="consent"' + (st.consent ? " checked" : "") + "><span>" + esc(tx("consent")) +
-      "<small>" + esc(tx("privacy")) + "</small></span></label>" +
-      (st.fieldErr.consent ? '<em class="bk-err">' + esc(tx("needConsent")) + "</em>" : "") +
       (st.error ? '<p class="bk-alert" role="alert">' + st.error + "</p>" : "") +
       "</form>";
     body.innerHTML = h;
     setNext(st.sending ? tx("sending") : tx("submit"), !st.sending);
+    legal.textContent = tx("legal"); legal.hidden = false;
   }
 
   function renderDone() {
@@ -350,7 +380,6 @@
     if (!f) return;
     var v = function (n) { var el = f.querySelector('[name="' + n + '"]'); return el ? el : { value: "", checked: false }; };
     st.name = v("name").value.trim(); st.phone = v("phone").value.trim(); st.email = v("email").value.trim();
-    st.consent = v("consent").checked;
     var note = $("[data-note]"); if (note) st.note = note.value;
   }
   function validate() {
@@ -359,7 +388,6 @@
     var digits = (st.phone.match(/\d/g) || []).length;
     if (!st.phone) e.phone = tx("req"); else if (digits < 6 || !/^[0-9+()\/.\-\s]{6,30}$/.test(st.phone)) e.phone = tx("badPhone");
     if (!st.email) e.email = tx("req"); else if (!reEmail.test(st.email)) e.email = tx("badEmail");
-    if (!st.consent) e.consent = 1;
     st.fieldErr = e;
     return !Object.keys(e).length;
   }
@@ -368,7 +396,7 @@
     st.error = "";
     if (!validate()) {
       renderStep3();
-      var firstErr = body.querySelector('[aria-invalid="true"], .bk-check.has-err input');
+      var firstErr = body.querySelector('[aria-invalid="true"]');
       if (firstErr) firstErr.focus();
       return;
     }
@@ -431,14 +459,27 @@
   body.addEventListener("click", function (e) {
     var t = e.target.closest("button, a");
     if (!t || !body.contains(t)) return;
-    if (t.hasAttribute("data-cat")) { st.cat = +t.getAttribute("data-cat"); st.item = cats[st.cat].items.length === 1 ? 0 : null; st.custom = false; st.month = null; st.date = null; st.time = null; render(); body.scrollTop = 0; return; }
+    if (t.hasAttribute("data-cat")) {
+      st.cat = +t.getAttribute("data-cat"); st.custom = false; st.month = null; st.date = null; st.time = null;
+      if (cats[st.cat].items.length === 1) { st.item = 0; stat("book_service"); return go(2); }
+      st.item = null; render(); body.scrollTop = 0; return;
+    }
     if (t.hasAttribute("data-custom")) { st.custom = true; st.cat = null; st.item = null; st.date = null; st.time = null; render(); var ta = $("[data-note]"); if (ta) ta.focus(); return; }
     if (t.hasAttribute("data-allcats")) { readForm(); st.cat = null; st.item = null; st.custom = false; render(); return; }
     if (t.hasAttribute("data-item")) {
-      var note = $("[data-note]"); if (note) st.note = note.value;
       var j = +t.getAttribute("data-item");
-      if (st.item !== j) { st.date = null; st.time = null; }
-      st.item = j; render();
+      if (st.item !== j) { st.date = null; st.time = null; st.month = null; st.autoNext = true; }
+      st.item = j;
+      t.setAttribute("aria-checked", "true");
+      stat("book_service");
+      return go(2);
+    }
+    if (t.hasAttribute("data-quick")) {
+      var q = t.getAttribute("data-quick").split("|");
+      st.date = q[0]; st.time = q[1];
+      if (st.notice) st.notice = "";
+      renderStep2();
+      next.focus();
       return;
     }
     if (t.hasAttribute("data-goto")) { go(+t.getAttribute("data-goto")); return; }
@@ -448,13 +489,12 @@
       st.time = t.getAttribute("data-time");
       if (st.notice) { st.notice = ""; var al = body.querySelector(".bk-alert"); if (al) al.remove(); }
       body.querySelectorAll(".bk-time").forEach(function (x) { x.setAttribute("aria-pressed", String(x === t)); });
+      body.querySelectorAll(".bk-quickbtn").forEach(function (x) { x.setAttribute("aria-pressed", String(x.getAttribute("data-quick") === st.date + "|" + st.time)); });
       next.disabled = false;
+      showChosen();
       if (window.matchMedia("(max-width: 760px)").matches) next.scrollIntoView({ block: "nearest" });
       return;
     }
-  });
-  body.addEventListener("change", function (e) {
-    if (e.target.name === "consent") { st.consent = e.target.checked; if (st.consent && st.fieldErr.consent) { st.fieldErr.consent = 0; readForm(); renderStep3(); } }
   });
   body.addEventListener("submit", function (e) { e.preventDefault(); submit(); });
   dlg.addEventListener("close", function () { document.documentElement.classList.remove("bk-open"); });
