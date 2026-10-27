@@ -30,7 +30,8 @@ nginx at `/api/` – nothing extra has to be exposed on the tunnel.
   The request lands in the app and is emailed to the salon; the customer only gets
   an email (in their language, with a calendar file) once it is accepted or declined.
 * Privacy: the site never shows the real schedule. It offers at most a few free
-  times per half-day, chosen in a secret order that changes every week, and a fully
+  times per half-day, chosen in a secret order that is different for each treatment length and
+  reshuffles every few hours, and a fully
   booked day looks exactly like a closed day.
 * **Statisztika** button in the header switches to a simple dashboard: visitors per
   day/week/month, where they came from, device, language, the booking funnel, clicks

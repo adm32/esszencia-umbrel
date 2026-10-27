@@ -4,7 +4,7 @@ name: Esszencia Foglalások
 tagline: Időpontfoglalások kezelése az Esszencia weboldalhoz
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-icon.svg
 category: productivity
-version: "1.1.1"
+version: "1.2.0"
 port: 4752
 description: >-
   Privát kezelőfelület az Esszencia Szépségműhely online időpontfoglalásaihoz.
@@ -22,7 +22,7 @@ description: >-
 
 
   Adatvédelem: a weboldal sosem mutatja a teljes beosztást – naponta csak néhány
-  szabad időpontot ajánl fel titkos, hetente változó sorrendben.
+  szabad időpontot ajánl fel titkos, néhány óránként változó sorrendben.
 
 
   Az Esszencia weboldal (adm-esszencia) ezen az appon keresztül fogad foglalásokat.
@@ -38,10 +38,9 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-2.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-3.jpg
 releaseNotes: >-
-  Hibajavítások: a távoli belépés megmarad, ha az értesítő e-mail linkjéről nyitod meg az appot;
-  néhány elgépelés vagy foglalt időpont után a vendégeket már nem tiltja ki a rendszer;
-  az időpontválasztó nem akad el hálózati hiba vagy gyors napváltás esetén; 4 órás kezelés is áthelyezhető;
-  a statisztika fájlja nem nőhet meg kéretlen hivatkozásoktól.
+  Új foglalásnál a kezelést a weboldal kezelései közül választhatod (az időtartam magától beáll), vagy beírhatsz egyedi kezelést.
+  Erősebb adatvédelem: a felajánlott időpontok kezeléshosszonként eltérnek és néhány óránként változnak, így a beosztásod semmilyen összehasonlítással nem fejthető vissza.
+  Az időpontválasztó jelzi, ha az adott napra zárást állítottál be.
 dependencies: []
 path: ""
 defaultUsername: ""

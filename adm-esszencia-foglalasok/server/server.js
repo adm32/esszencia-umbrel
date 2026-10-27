@@ -20,6 +20,7 @@ const path = require('path');
 const crypto = require('crypto');
 const mail = require('./lib/mail');
 const tpl = require('./lib/templates');
+const servicesList = require('./lib/services');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const ADMIN_PORT = +process.env.ADMIN_PORT || 8080;
@@ -135,15 +136,23 @@ function overlaps(date, time, minutes, excludeId) {
 /* ------------------------------------------------------- privacy: offers
    Visitors never see the real list of free times. For each day the server
    offers at most `offerPerHalfDay` times in the morning and in the afternoon,
-   picked from the free ones by a secret, weekly-changing order. A time that
-   is not shown may be booked – or simply not offered – so the calendar does
-   not reveal when the salon is busy. Fully booked days look like closed days. */
-function weekKey() { const d = dayNum(now().date); return String(Math.floor((d + 3) / 7)); }
-function offered(date, minutes) {
+   picked from the free ones in a secret order. A time that is not shown may be
+   booked – or simply not offered – so the calendar does not reveal when the
+   salon is busy. Fully booked days look like closed days.
+   The secret order
+   • is different for every treatment length, so comparing what a short and a
+     long treatment are offered tells nothing about where bookings are, and
+   • reshuffles every few hours, so offered times come and go all the time and
+     a time disappearing is no sign that someone booked it.
+   A booking is accepted for a time offered in the current or the previous
+   window, so nobody is caught out by a reshuffle while filling in the form. */
+const OFFER_WINDOW_MIN = 240;
+const offerWindow = () => Math.floor(now().abs / OFFER_WINDOW_MIN);
+function offered(date, minutes, win) {
   const free = freeStarts(date, minutes);
   const k = Math.max(1, settings.offerPerHalfDay || 3);
   if (!free.length) return [];
-  const key = settings.secret + '|' + weekKey() + '|' + date;
+  const key = settings.secret + '|' + (win == null ? offerWindow() : win) + '|' + date + '|' + minutes;
   const rank = (t) => crypto.createHmac('sha256', key).update(t).digest().readUInt32BE(0);
   const pick = (arr) => arr.slice().sort((a, b) => rank(a) - rank(b)).slice(0, k);
   const am = free.filter((t) => toMin(t) < 720);
@@ -295,7 +304,8 @@ async function publicApi(req, res) {
     if (!b.service.hu) { b.service.hu = 'Egyedi kérés'; b.service.local = b.service.local || b.service.hu; }
 
     // Final check happens here, in one synchronous step – two people can never get the same time.
-    if (offered(b.date, b.minutes).indexOf(b.time) < 0) return send(res, 409, { error: 'taken' });
+    const w = offerWindow();
+    if (offered(b.date, b.minutes, w).indexOf(b.time) < 0 && offered(b.date, b.minutes, w - 1).indexOf(b.time) < 0) return send(res, 409, { error: 'taken' });
     db.bookings.push(b);
     saveDb();
     limited('ok:' + ip, 5, 3600000); limited('all', 40, 3600000); // count successful requests only
@@ -480,6 +490,11 @@ async function adminApi(req, res, ctx) {
       setRemotePassword(pw);
     }
     return send(res, 200, { ok: true, settings: settingsForClient() });
+  }
+
+  if (req.method === 'GET' && p === '/api/admin/services') {
+    const r = await servicesList.load({ dataDir: DATA_DIR, siteUrl: settings.siteUrl, force: url.searchParams.get('refresh') === '1' });
+    return send(res, 200, { source: r.source, categories: r.data.categories });
   }
 
   if (req.method === 'GET' && p === '/api/admin/stats') {

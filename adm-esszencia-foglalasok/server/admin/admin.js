@@ -415,7 +415,9 @@
       if (token !== box.__req) return;
       var hours = S.settings.hours[dateObj(date).getUTCDay()];
       if (!d.times.length) {
-        box.innerHTML = '<span class="times-empty">' + (hours ? 'Ezen a napon nincs szabad hely ekkora időre.' : 'Ezen a napon zárva vagy.') + ' Pontos időt alább kézzel is megadhatsz.</span>';
+        var closed = S.blocks.filter(function (k) { return k.allDay && date >= k.date && date <= (k.dateTo || k.date); })[0];
+        var why = closed ? 'Erre a napra zárást állítottál be' + (closed.note ? ' (' + closed.note + ')' : '') + '.' : hours ? 'Ezen a napon nincs szabad hely ekkora időre.' : 'Ezen a napon zárva vagy.';
+        box.innerHTML = '<span class="times-empty">' + esc(why) + ' Pontos időt alább kézzel is megadhatsz.</span>';
         return;
       }
       box.innerHTML = d.times.map(function (t) { return '<button type="button" data-t="' + t + '" aria-pressed="' + (t === input.value) + '">' + t + '</button>'; }).join('');
@@ -463,7 +465,9 @@
       '<label class="field"><span>Vendég neve *</span><input name="name" required autocomplete="off"></label>' +
       '<div class="row2"><label class="field"><span>Telefon</span><input name="phone" type="tel" autocomplete="off"></label>' +
       '<label class="field"><span>E-mail</span><input name="email" type="email" autocomplete="off"></label></div>' +
-      '<label class="field"><span>Kezelés</span><input name="serviceHu" placeholder="Pl. Alap kiskezelés – arc"></label>' +
+      '<label class="field" data-svc-wrap><span>Kezelés</span><select name="svc" data-svc><option value="">Kezelések betöltése…</option></select>' +
+      '<small>Válassz a weboldal kezelései közül – az időtartam magától beáll. Ha nincs a listában, válaszd az „Egyedi kezelés” sort.</small></label>' +
+      '<label class="field" data-svc-custom hidden><span>Egyedi kezelés</span><input name="serviceHu" autocomplete="off" placeholder="Pl. arcmasszázs + szemöldökfestés"></label>' +
       '<div class="row2"><label class="field"><span>Nap *</span><input type="date" name="date" value="' + (presetDate || S.today) + '" required></label>' +
       '<label class="field"><span>Időtartam</span>' + durSelect('minutes', 60) + '</label></div>' +
       '<div class="field"><span>Szabad kezdési időpontok</span><div class="times" data-times></div></div>' +
@@ -471,8 +475,10 @@
       '<label class="field"><span>Megjegyzés</span><textarea name="note"></textarea></label>' +
       '<label class="check"><input type="checkbox" name="send"><span>Visszaigazoló e-mail küldése (ha van e-mail cím)</span></label>',
       'Foglalás mentése', function (fd) {
-        var body = { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), serviceHu: fd.get('serviceHu'), date: fd.get('date'), time: fd.get('time'), minutes: +fd.get('minutes'), note: fd.get('note'), sendEmail: !!fd.get('send') };
+        var pick = svcPicked(fd.get('svc'));
+        var body = { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), serviceHu: pick ? pick.name : fd.get('serviceHu'), date: fd.get('date'), time: fd.get('time'), minutes: +fd.get('minutes'), note: fd.get('note'), sendEmail: !!fd.get('send') };
         if (!body.name || body.name.trim().length < 2) return Promise.reject(new Error('Add meg a vendég nevét.'));
+        if (fd.get('svc') === 'custom' && !String(fd.get('serviceHu') || '').trim()) return Promise.reject(new Error('Írd be, milyen kezelést kér a vendég (vagy válassz a listából).'));
         if (!body.time) return Promise.reject(new Error('Válassz kezdési időpontot.'));
         var go = function (force) { return api('/api/admin/bookings', { method: 'POST', body: Object.assign({ force: force }, body) }).then(function (r) { tab = 'calendar'; return afterMail(r, 'Foglalás mentve.'); }); };
         return go(false).catch(function (e) { if (e.status === 409 && confirm(e.message + '\n\nMégis mented?')) return go(true); throw e; });
@@ -482,6 +488,41 @@
     $('input[name=date]', body).addEventListener('change', refresh);
     $('select[name=minutes]', body).addEventListener('change', refresh);
     refresh();
+    fillServicePicker(body, refresh);
+  }
+
+  /* ---- treatment picker: the website's treatments, or a custom one ---- */
+  var SVC = null;
+  function loadServices() {
+    if (SVC && SVC.categories.length) return Promise.resolve(SVC);
+    return api('/api/admin/services').then(function (d) { SVC = d; return d; }).catch(function () { return { categories: [] }; });
+  }
+  function svcPicked(v) {
+    var m = /^(\d+)\.(\d+)$/.exec(v || '');
+    if (!m || !SVC || !SVC.categories[+m[1]]) return null;
+    return SVC.categories[+m[1]].items[+m[2]] || null;
+  }
+  function fillServicePicker(body, refresh) {
+    var sel = $('[data-svc]', body), custom = $('[data-svc-custom]', body);
+    loadServices().then(function (d) {
+      if (!document.body.contains(sel)) return; // dialog closed meanwhile
+      if (!d.categories.length) { $('[data-svc-wrap]', body).hidden = true; custom.hidden = false; return; }
+      sel.innerHTML = '<option value="">– Válassz kezelést –</option>' + d.categories.map(function (c, ci) {
+        return '<optgroup label="' + esc(c.name) + '">' + c.items.map(function (it, ii) {
+          return '<option value="' + ci + '.' + ii + '">' + esc(it.name) + (it.price ? ' · ' + esc(it.price) : '') + '</option>';
+        }).join('') + '</optgroup>';
+      }).join('') + '<optgroup label="Egyéb"><option value="custom">✎ Egyedi kezelés (beírom)</option></optgroup>';
+    });
+    sel.addEventListener('change', function () {
+      var it = svcPicked(sel.value);
+      custom.hidden = sel.value !== 'custom';
+      if (sel.value === 'custom') $('input', custom).focus();
+      if (it) {
+        var len = DUR.filter(function (m) { return m >= it.minutes; })[0] || DUR[DUR.length - 1];
+        $('select[name=minutes]', body).value = String(len);
+        refresh();
+      }
+    });
   }
 
   function newBlock(presetDate) {
@@ -584,7 +625,7 @@
       '<div class="row2"><label class="field"><span>Kezdési időpontok lépése</span><select name="stepMinutes">' + [15, 30, 60].map(function (m) { return '<option value="' + m + '"' + (m === s.stepMinutes ? ' selected' : '') + '>' + m + ' perc</option>'; }).join('') + '</select></label>' +
       '<label class="field"><span>Szünet két vendég között</span><select name="bufferMinutes">' + [0, 10, 15, 20, 30].map(function (m) { return '<option value="' + m + '"' + (m === s.bufferMinutes ? ' selected' : '') + '>' + (m ? m + ' perc' : 'nincs') + '</option>'; }).join('') + '</select></label></div>' +
       '<label class="field"><span>Adatvédelem: naponta felajánlott időpontok (délelőtt és délután külön)</span><select name="offerPerHalfDay">' + [2, 3, 4, 5, 6, 10, 20].map(function (m) { return '<option value="' + m + '"' + (m === s.offerPerHalfDay ? ' selected' : '') + '>legfeljebb ' + m + ' + ' + m + '</option>'; }).join('') + '</select>' +
-      '<small>A weboldal sosem mutatja a teljes beosztásodat: a szabad időpontokból csak néhányat ajánl fel, titkos sorrendben, ami hetente változik. A teljesen foglalt nap úgy néz ki, mint egy zárt nap.</small></label></div>' +
+      '<small>A weboldal sosem mutatja a teljes beosztásodat: a szabad időpontokból csak néhányat ajánl fel, titkos sorrendben, ami néhány óránként és kezeléshosszonként is más. A teljesen foglalt nap úgy néz ki, mint egy zárt nap.</small></label></div>' +
 
       '<div class="panel"><h3>Linkek</h3>' +
       '<label class="field"><span>Ennek az alkalmazásnak a címe (a gombhoz az értesítő e-mailben)</span><input name="adminUrl" value="' + esc(s.adminUrl) + '"></label>' +

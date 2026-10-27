@@ -1,0 +1,249 @@
+{
+ "categories": [
+  {
+   "name": "Arctisztító nagykezelések",
+   "items": [
+    {
+     "name": "Alap nagykezelés – arc",
+     "price": "10 500 Ft",
+     "duration": "~60 perc",
+     "minutes": 60
+    },
+    {
+     "name": "Alap nagykezelés – arc + dekoltázs",
+     "price": "12 500 Ft",
+     "duration": "~75 perc",
+     "minutes": 75
+    },
+    {
+     "name": "Alap nagykezelés – arc + dekoltázs + gépi hatóanyagbevitel",
+     "price": "14 500 Ft",
+     "duration": "~90 perc",
+     "minutes": 90
+    }
+   ]
+  },
+  {
+   "name": "Kiskezelések",
+   "items": [
+    {
+     "name": "Alap kiskezelés – arc",
+     "price": "9 500 Ft",
+     "duration": "~60 perc",
+     "minutes": 60
+    },
+    {
+     "name": "Alap kiskezelés – arc + dekoltázs",
+     "price": "12 500 Ft",
+     "duration": "~75 perc",
+     "minutes": 75
+    },
+    {
+     "name": "Alap kiskezelés – arc + dekoltázs + gépi hatóanyagbevitel",
+     "price": "14 500 Ft",
+     "duration": "~90 perc",
+     "minutes": 90
+    }
+   ]
+  },
+  {
+   "name": "Fasciális arcterápia",
+   "items": [
+    {
+     "name": "Fasciális arcterápia",
+     "price": "13 500 Ft",
+     "duration": "60 perc",
+     "minutes": 60
+    },
+    {
+     "name": "Fasciális arcterápia + arcszobrász masszázs",
+     "price": "15 600 Ft",
+     "duration": "90 perc",
+     "minutes": 90
+    },
+    {
+     "name": "Flow & Relax spa kezelés",
+     "price": "19 000 Ft",
+     "duration": "~2,5–3 óra",
+     "minutes": 180
+    }
+   ]
+  },
+  {
+   "name": "Masszázsok",
+   "items": [
+    {
+     "name": "Relaxáló arc- és dekoltázsmasszázs",
+     "price": "7 500 / 9 000 Ft",
+     "duration": "45 / 60 perc",
+     "minutes": 60
+    },
+    {
+     "name": "Indiai stresszoldó fej- és nyakmasszázs",
+     "price": "6 000 Ft",
+     "duration": "30 perc",
+     "minutes": 30
+    },
+    {
+     "name": "Talp- és lábmasszázs",
+     "price": "6 000 Ft",
+     "duration": "30 perc",
+     "minutes": 30
+    },
+    {
+     "name": "Relaxáló hátmasszázs",
+     "price": "6 000 Ft",
+     "duration": "30 perc",
+     "minutes": 30
+    }
+   ]
+  },
+  {
+   "name": "Gyanták – nőknek",
+   "items": [
+    {
+     "name": "Bajusz / áll / pajesz / szemöldök",
+     "price": "1 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Bajusz + áll + pajesz",
+     "price": "3 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Térdig",
+     "price": "3 000 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Teljes láb",
+     "price": "5 000 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Bikini",
+     "price": "2 000 – 2 800 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Intim (brazil)",
+     "price": "3 500 – 4 000 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Intim (popsival)",
+     "price": "4 200 – 4 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Hónalj",
+     "price": "1 500 – 2 000 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Kar – alkar / teljes kar",
+     "price": "2 000 – 2 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Hát",
+     "price": "3 800 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Has",
+     "price": "2 000 Ft",
+     "duration": "",
+     "minutes": 30
+    }
+   ]
+  },
+  {
+   "name": "Gyanták – férfiaknak",
+   "items": [
+    {
+     "name": "Szemöldök",
+     "price": "1 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Mellkas + has",
+     "price": "4 000 – 4 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Hát + váll",
+     "price": "4 000 – 5 000 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Láb végig",
+     "price": "5 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Láb térdig",
+     "price": "3 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Kar (alkar + felkar)",
+     "price": "3 000 Ft",
+     "duration": "",
+     "minutes": 30
+    }
+   ]
+  },
+  {
+   "name": "Festések",
+   "items": [
+    {
+     "name": "Szempillafestés",
+     "price": "2 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Szemöldökfestés",
+     "price": "2 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Szempilla- + szemöldökfestés (szedéssel)",
+     "price": "4 800 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Szemöldökszedés, igazítás",
+     "price": "1 500 Ft",
+     "duration": "",
+     "minutes": 30
+    },
+    {
+     "name": "Szempilla- + szemöldökfestés bármelyik arckezelés mellé",
+     "price": "3 800 Ft",
+     "duration": "",
+     "minutes": 30
+    }
+   ]
+  }
+ ]
+}
