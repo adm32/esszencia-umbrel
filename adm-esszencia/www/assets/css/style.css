@@ -324,6 +324,14 @@ html.i18n-pending body { opacity: 0; }
 .site-footer .lang-switch button[aria-pressed="true"] { background: var(--cream); color: var(--pine); }
 .footer-copy { margin: 6px 0 0; font-size: .85rem; color: var(--on-forest); opacity: .85; }
 
+/* Website credit – core webstúdió (same as on vadviragetterem.com) */
+.made { display: flex; justify-content: flex-end; margin-top: 28px; padding-top: 16px; border-top: 1px solid #ffffff14; }
+.site-footer .made a { display: inline-flex; align-items: center; gap: 8px; color: #C7D0C8; font-size: 13px; font-weight: 500; text-decoration: none; transition: color .2s; }
+.site-footer .made a:hover { color: #fff; text-decoration: none; }
+.made img { width: 22px; height: 22px; border-radius: 7px; box-shadow: 0 0 0 1px #ffffff38; transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.made a:hover img { transform: rotate(-8deg) scale(1.1); }
+@media (max-width: 760px) { .made { justify-content: flex-start; } }
+
 /* ---------- Phone: sticky action bar ---------- */
 .action-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: none; grid-template-columns: auto 1fr; gap: 8px;

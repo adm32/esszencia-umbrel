@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.4.0"
+version: "1.4.1"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -35,10 +35,7 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  Őszi újdonság: Pumpskin Up szérum és arckrém a Magister Apple & Pump kollekciójából.
-  Megújult terméklista a legmodernebb hatóanyagokkal (retinal, bakuchiol, Zanthalene®, rézpeptid, niacinamid, peptid + C-vitamin), árakkal.
-  Frissített árlista (nagykezelések, Flow & Relax ~2,5–3 óra / 19 000 Ft).
-  Egyszerűbb foglalás: egy koppintással tovább, „legközelebbi szabad időpontok”, ár és időtartam az összegzésben, jelölőnégyzet nélkül.
+  A lábléc alján megjelent a „Weboldal: core webstúdió” jelzés (link az admcore.hu oldalra), ugyanúgy, mint a Vadvirág Étterem oldalán.
 dependencies: []
 path: ""
 defaultUsername: ""

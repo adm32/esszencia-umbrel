@@ -113,6 +113,7 @@ window.ESSZ_I18N = {
     "A márka hivatalos oldala": ["The brand's official website", "Offizielle Website der Marke", "Märkets officiella webbplats"],
     "Séance termékek kék üvegekben, pálmalevelek előtt": ["Séance products in blue bottles in front of palm leaves", "Séance-Produkte in blauen Flaschen vor Palmblättern", "Séance-produkter i blå flaskor framför palmblad"],
 
+    "Weboldal: core webstúdió": ["Website by core webstúdió", "Website von core webstúdió", "Webbplats av core webstúdió"],
     /* ---- 05b products: autumn feature + modern actives ---- */
     "Őszi újdonság": ["New for autumn", "Herbst-Neuheit", "Nyhet i höst"],
     "Pumpskin Up –": ["Pumpskin Up –", "Pumpskin Up –", "Pumpskin Up –"],
