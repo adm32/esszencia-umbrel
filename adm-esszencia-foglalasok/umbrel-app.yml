@@ -4,7 +4,7 @@ name: Esszencia Foglalások
 tagline: Időpontfoglalások kezelése az Esszencia weboldalhoz
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-icon.svg
 category: productivity
-version: "1.2.0"
+version: "1.3.0"
 port: 4752
 description: >-
   Privát kezelőfelület az Esszencia Szépségműhely online időpontfoglalásaihoz.
@@ -38,9 +38,7 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-2.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-3.jpg
 releaseNotes: >-
-  Új foglalásnál a kezelést a weboldal kezelései közül választhatod (az időtartam magától beáll), vagy beírhatsz egyedi kezelést.
-  Erősebb adatvédelem: a felajánlott időpontok kezeléshosszonként eltérnek és néhány óránként változnak, így a beosztásod semmilyen összehasonlítással nem fejthető vissza.
-  Az időpontválasztó jelzi, ha az adott napra zárást állítottál be.
+  A foglalási szerver Go nyelven újraírva (a Node.js helyett). Minden ugyanúgy működik: a meglévő foglalások, beállítások, statisztikák, a távoli jelszó és a bejelentkezések megmaradnak. Az első indítás pár másodperccel tovább tart, mert ilyenkor fordul le a szerver.
 dependencies: []
 path: ""
 defaultUsername: ""

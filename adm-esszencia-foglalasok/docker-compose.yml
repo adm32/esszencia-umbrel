@@ -9,17 +9,24 @@ services:
       # Private admin app: Umbrel's login screen stays ON (default).
 
   server:
-    image: node:22-alpine
+    # Booking server written in Go (server/*.go, standard library only).
+    # It is compiled when the container starts – takes a few seconds the first time.
+    image: golang:1.24-alpine
     restart: on-failure
     stop_grace_period: 5s
     user: "1000:1000"
     working_dir: /app
-    command: ["node", "server.js"]
+    command: ["sh", "-c", "go build -buildvcs=false -trimpath -o /tmp/esszencia-foglalasok . && exec /tmp/esszencia-foglalasok"]
     extra_hosts:
       # reads the treatment list from the Esszencia website app (port 4751)
       - "host.docker.internal:host-gateway"
     environment:
       TZ: Europe/Budapest
+      CGO_ENABLED: "0"
+      GOTOOLCHAIN: local
+      GOCACHE: /tmp/gocache
+      GOPATH: /tmp/go
+      HOME: /tmp
       DATA_DIR: /data
       ADMIN_PORT: "8080"
       PUBLIC_PORT: "3001"

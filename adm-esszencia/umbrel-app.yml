@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.4.1"
+version: "1.5.0"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -21,7 +21,7 @@ description: >-
 
 
   Négy nyelven (magyar, English, Deutsch, svenska), telefonra optimalizálva.
-  Statikus oldal nginx-szel, külső függőség nélkül (a betűtípusok is helyben
+  Statikus oldal egy kis Go szerverrel, külső függőség nélkül (a betűtípusok is helyben
   vannak). Az árlista a www/assets/js/services.js fájlban szerkeszthető.
 developer: adm
 website: https://www.facebook.com/profile.php?id=61572319876098
@@ -35,7 +35,7 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  A lábléc alján megjelent a „Weboldal: core webstúdió” jelzés (link az admcore.hu oldalra), ugyanúgy, mint a Vadvirág Étterem oldalán.
+  A weboldalt kiszolgáló szerver Go nyelven újraírva (az nginx helyett). Az oldal, a gyorsítótárazás, a biztonsági fejlécek és az online foglalás ugyanúgy működnek, mint eddig. Az első indítás pár másodperccel tovább tart, mert ilyenkor fordul le a szerver.
 dependencies: []
 path: ""
 defaultUsername: ""
