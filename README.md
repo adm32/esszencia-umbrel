@@ -125,12 +125,12 @@ Latin plant names. Both are self-hosted under the SIL Open Font License.
 umbrel-app-store.yml          store id "adm"
 adm-esszencia/
   umbrel-app.yml              Umbrel listing
-  docker-compose.yml          golang:1.24-alpine + Umbrel app proxy
+  docker-compose.yml          alpine:3.20 + Umbrel app proxy
   server/main.go              web server: gzip, caching, security headers (strict CSP), /api/ proxy
   www/                        the website
 adm-esszencia-foglalasok/
   umbrel-app.yml              Umbrel listing
-  docker-compose.yml          golang:1.24-alpine + Umbrel app proxy (login protected)
+  docker-compose.yml          alpine:3.20 + Umbrel app proxy (login protected)
   server/main.go              booking + statistics server (Go standard library only)
   server/mail.go              Gmail SMTP client
   server/templates.go         e-mail templates (HU/EN/DE/SV)
@@ -139,8 +139,8 @@ adm-esszencia-foglalasok/
 assets/                       icon, store screenshots, palette
 ```
 
-Both servers are written in Go with only the standard library. There is no
-pre-built image: the official `golang:1.24-alpine` image compiles the code in
-`server/` when the container starts (a few seconds the first time), so the
-source in this repository is exactly what runs. The data files in
+Both servers are written in Go with only the standard library. The containers
+use the tiny `alpine:3.20` image and run the ready-built static binaries in
+`server/bin/` (amd64 and arm64), so they start instantly. After changing any
+`server/*.go` file, run `./build.sh` and commit the updated `bin/` folders. The data files in
 `app-data/.../data/` keep the same format as before.

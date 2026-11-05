@@ -10,17 +10,14 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    # Small Go web server (server/main.go, standard library only).
-    # It is compiled when the container starts – takes a few seconds the first time.
-    image: golang:1.24-alpine
+    # Small Go web server (source: server/main.go). It runs the ready-built
+    # binary from server/bin/ (rebuild with build.sh), so it starts instantly.
+    image: alpine:3.20
     restart: on-failure
     stop_grace_period: 10s
     working_dir: /src
-    command: ["sh", "-c", "go build -buildvcs=false -trimpath -o /tmp/esszencia-site . && exec /tmp/esszencia-site"]
+    command: ["sh", "-c", "case $$(uname -m) in aarch64|arm64) a=arm64;; *) a=amd64;; esac; cp /src/bin/esszencia-site-$$a /tmp/esszencia-site && chmod 755 /tmp/esszencia-site && exec /tmp/esszencia-site"]
     environment:
-      CGO_ENABLED: "0"
-      GOTOOLCHAIN: local
-      GOCACHE: /tmp/gocache
       WWW_DIR: /www
       LISTEN: ":80"
       API_UPSTREAM: host.docker.internal:4753

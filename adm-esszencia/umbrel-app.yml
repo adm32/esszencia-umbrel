@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.5.0"
+version: "1.5.1"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -35,7 +35,7 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  A weboldalt kiszolgáló szerver Go nyelven újraírva (az nginx helyett). Az oldal, a gyorsítótárazás, a biztonsági fejlécek és az online foglalás ugyanúgy működnek, mint eddig. Az első indítás pár másodperccel tovább tart, mert ilyenkor fordul le a szerver.
+  Javítás: az app újra elindul. A szerver most előre lefordítva érkezik, így nem kell indításkor letölteni és fordítani – azonnal elindul. Minden adat megmarad.
 dependencies: []
 path: ""
 defaultUsername: ""
