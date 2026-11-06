@@ -10,21 +10,13 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    # Small Go web server (source: server/main.go). It runs the ready-built
-    # binary from server/bin/ (rebuild with build.sh), so it starts instantly.
-    image: alpine:3.20
+    image: nginx:stable-alpine
     restart: on-failure
     stop_grace_period: 10s
-    working_dir: /src
-    command: ["sh", "-c", "case $$(uname -m) in aarch64|arm64) a=arm64;; *) a=amd64;; esac; cp /src/bin/esszencia-site-$$a /tmp/esszencia-site && chmod 755 /tmp/esszencia-site && exec /tmp/esszencia-site"]
-    environment:
-      WWW_DIR: /www
-      LISTEN: ":80"
-      API_UPSTREAM: host.docker.internal:4753
     extra_hosts:
-      # lets the site reach the booking API published by the Esszencia Foglalások app
+      # lets nginx reach the booking API published by the Esszencia Foglalások app
       - "host.docker.internal:host-gateway"
     volumes:
-      # Umbrel copies this app folder (www/ + server/) into ${APP_DATA_DIR}
-      - ${APP_DATA_DIR}/www:/www:ro
-      - ${APP_DATA_DIR}/server:/src:ro
+      # Umbrel copies this app folder (www/ + nginx.conf) into ${APP_DATA_DIR}
+      - ${APP_DATA_DIR}/www:/usr/share/nginx/html:ro
+      - ${APP_DATA_DIR}/nginx.conf:/etc/nginx/conf.d/default.conf:ro

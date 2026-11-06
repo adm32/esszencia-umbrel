@@ -2,7 +2,7 @@
 
 The website of **Esszencia Szépségműhely · Beauty & Relax** (Sénye), packaged as an
 [Umbrel](https://umbrel.com) community app store. One static page in four languages
-(HU · EN · DE · SE), served by a small Go web server, with no external dependencies: fonts, images
+(HU · EN · DE · SE), served by nginx, with no external dependencies: fonts, images
 and scripts are all local, so nothing is loaded from Google or any other third party.
 
 ![Palette](assets/palette.svg)
@@ -24,7 +24,7 @@ To put it on a real domain, point a Cloudflare Tunnel public hostname at
 Install **Esszencia Foglalások** from the same store as well. It is the private
 back office (port **4752**, behind the Umbrel login) and it also runs the small
 public booking API on port **4753**, which the website reaches through its own
-server at `/api/` – nothing extra has to be exposed on the tunnel.
+nginx at `/api/` – nothing extra has to be exposed on the tunnel.
 
 * Customers pick a treatment (or describe what they want), a day and a time.
   The request lands in the app and is emailed to the salon; the customer only gets
@@ -125,22 +125,14 @@ Latin plant names. Both are self-hosted under the SIL Open Font License.
 umbrel-app-store.yml          store id "adm"
 adm-esszencia/
   umbrel-app.yml              Umbrel listing
-  docker-compose.yml          alpine:3.20 + Umbrel app proxy
-  server/main.go              web server: gzip, caching, security headers (strict CSP), /api/ proxy
+  docker-compose.yml          nginx:stable-alpine + Umbrel app proxy
+  nginx.conf                  gzip, caching, security headers (strict CSP)
   www/                        the website
 adm-esszencia-foglalasok/
   umbrel-app.yml              Umbrel listing
-  docker-compose.yml          alpine:3.20 + Umbrel app proxy (login protected)
-  server/main.go              booking + statistics server (Go standard library only)
-  server/mail.go              Gmail SMTP client
-  server/templates.go         e-mail templates (HU/EN/DE/SV)
-  server/services.go          treatment list read from the website's price list
+  docker-compose.yml          node:22-alpine + Umbrel app proxy (login protected)
+  server/server.js            booking + statistics server, no npm dependencies
+  server/lib/                 Gmail SMTP client, e-mail templates (HU/EN/DE/SV)
   server/admin/               the back office (bookings + statistics dashboard)
 assets/                       icon, store screenshots, palette
 ```
-
-Both servers are written in Go with only the standard library. The containers
-use the tiny `alpine:3.20` image and run the ready-built static binaries in
-`server/bin/` (amd64 and arm64), so they start instantly. After changing any
-`server/*.go` file, run `./build.sh` and commit the updated `bin/` folders. The data files in
-`app-data/.../data/` keep the same format as before.
