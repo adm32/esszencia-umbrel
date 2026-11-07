@@ -71,6 +71,41 @@ const saveDb = () => writeJson(DB_FILE, db);
 const saveSettings = () => writeJson(SETTINGS_FILE, settings);
 if (!settings.secret) { settings.secret = crypto.randomBytes(24).toString('hex'); saveSettings(); }
 
+/* ----------------------------------------------------------------- prices
+   Every booking carries its price in Ft (b.price) for the revenue statistics.
+   It is taken from the website's price list when the booking is made (or, for
+   older bookings, the first time the statistics are opened) and can be
+   overwritten by hand. b.priceAuto = true marks a price taken from the list;
+   b.price = null means "no price" (e.g. a custom treatment nobody priced yet). */
+let svcData = servicesList.loadSync(DATA_DIR);
+const listPrice = (b) => servicesList.priceFor(svcData, b.service && b.service.hu, b.service && b.service.category, b.minutes);
+function parsePrice(v) {
+  if (v === null || v === undefined || String(v).trim() === '') return null;
+  const n = Math.round(+String(v).replace(/[\s\u00a0\u202f.]/g, '').replace(/ft$/i, '').replace(',', '.'));
+  return isFinite(n) && n >= 0 && n <= 10000000 ? n : NaN;
+}
+function autoPrice(b) {
+  const p = listPrice(b);
+  if (p != null) { b.price = p; b.priceAuto = true; } else { delete b.price; delete b.priceAuto; }
+}
+/** Gives a price to bookings that have never had one (bookings from before this feature). */
+function fillPrices() {
+  let changed = false;
+  for (const b of db.bookings) {
+    if (b.price !== undefined) continue;
+    const p = listPrice(b);
+    if (p != null) { b.price = p; b.priceAuto = true; changed = true; }
+  }
+  if (changed) saveDb();
+}
+function refreshServices() {
+  return servicesList.load({ dataDir: DATA_DIR, siteUrl: settings.siteUrl })
+    .then((r) => { if (r.data.categories.length) { svcData = r.data; fillPrices(); } })
+    .catch(() => {});
+}
+fillPrices();
+setTimeout(refreshServices, 3000).unref();
+
 /* ------------------------------------------------------------------- time */
 const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
 const fromMin = (n) => String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0');
@@ -302,6 +337,7 @@ async function publicApi(req, res) {
     if (body.consent !== true) errors.consent = 1;
     if (Object.keys(errors).length) return send(res, 400, { error: 'invalid', fields: errors });
     if (!b.service.hu) { b.service.hu = 'Egyedi kérés'; b.service.local = b.service.local || b.service.hu; }
+    autoPrice(b);
 
     // Final check happens here, in one synchronous step – two people can never get the same time.
     const w = offerWindow();
@@ -421,6 +457,85 @@ function statsReport(days) {
   };
 }
 
+/* ================================================================ REVENUE
+   Összbevétel: every confirmed visit that has already happened counts – booked
+   on the website or typed in by hand, including bookings from before this
+   feature (their price is taken from the price list). Bookings are deleted after
+   a year for privacy, so an anonymous line (day, treatment, price) of each old
+   visit is kept in revenue-archive.json and still counts. */
+const ARCHIVE_FILE = path.join(DATA_DIR, 'revenue-archive.json');
+const archive = readJson(ARCHIVE_FILE, { items: [] });
+archive.items = Array.isArray(archive.items) ? archive.items : [];
+
+function isDone(b) {
+  if (b.status !== 'confirmed') return false;
+  const t = now();
+  return b.date < t.date || (b.date === t.date && toMin(b.time) + b.minutes <= t.min);
+}
+
+function revenueReport(days) {
+  const t = now().date;
+  const from = addDays(t, -(days - 1));
+  const prevFrom = addDays(from, -days);
+  const prevTo = addDays(from, -1);
+  // one list of visits: live bookings + the anonymous archive
+  const visits = db.bookings.filter(isDone).map((b) => ({
+    d: b.date, s: (b.service && b.service.hu) || 'Kezelés', p: b.price == null ? null : b.price,
+    src: b.source === 'manual' ? 'manual' : 'web', b
+  })).concat(archive.items.map((a) => ({ d: a.d, s: a.s, p: a.p, src: a.src })));
+
+  const daily = {};
+  const dailyN = {};
+  const services = {};
+  const sources = { web: 0, manual: 0 };
+  let total = 0, count = 0, unpriced = 0, prevTotal = 0, prevCount = 0, allTotal = 0, allCount = 0, since = null;
+  const missing = [];
+  const monthKeys = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1 - i, 1));
+    monthKeys.push(d.toISOString().slice(0, 7));
+  }
+  const months = {};
+  monthKeys.forEach((k) => { months[k] = { m: k, v: 0, n: 0 }; });
+
+  for (const v of visits) {
+    const p = v.p || 0;
+    allCount++; allTotal += p;
+    if (!since || v.d < since) since = v.d;
+    const mk = v.d.slice(0, 7);
+    if (months[mk]) { months[mk].v += p; months[mk].n++; }
+    if (v.d >= from && v.d <= t) {
+      count++; total += p;
+      daily[v.d] = (daily[v.d] || 0) + p;
+      dailyN[v.d] = (dailyN[v.d] || 0) + 1;
+      services[v.s] = (services[v.s] || 0) + p;
+      sources[v.src] += p;
+      if (v.p == null) {
+        unpriced++;
+        if (v.b && missing.length < 30) missing.push({ id: v.b.id, date: v.b.date, time: v.b.time, name: v.b.name, service: v.s });
+      }
+    } else if (v.d >= prevFrom && v.d <= prevTo) { prevCount++; prevTotal += p; }
+  }
+  const series = [];
+  for (let i = 0; i < days; i++) { const d = addDays(from, i); series.push({ d, v: daily[d] || 0, n: dailyN[d] || 0 }); }
+
+  // already confirmed visits still ahead
+  let upTotal = 0, upCount = 0, upUnpriced = 0;
+  for (const b of db.bookings) {
+    if (b.status !== 'confirmed' || isDone(b)) continue;
+    upCount++;
+    if (b.price == null) upUnpriced++; else upTotal += b.price;
+  }
+  missing.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+  return {
+    from, today: t, days, total, count, priced: count - unpriced, unpriced, prevTotal, prevCount,
+    series, months: monthKeys.map((k) => months[k]), services, sources,
+    upcoming: { total: upTotal, count: upCount, unpriced: upUnpriced },
+    allTime: { total: allTotal, count: allCount, since },
+    missing
+  };
+}
+
 /* ============================================================= ADMIN API */
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon' };
 
@@ -499,7 +614,9 @@ async function adminApi(req, res, ctx) {
 
   if (req.method === 'GET' && p === '/api/admin/stats') {
     const days = Math.min(365, Math.max(7, parseInt(url.searchParams.get('days'), 10) || 30));
-    return send(res, 200, statsReport(days));
+    refreshServices(); // in the background; prices from the last known list right away
+    fillPrices();
+    return send(res, 200, Object.assign(statsReport(days), { revenue: revenueReport(days) }));
   }
 
   if (req.method === 'GET' && p === '/api/admin/slots') {
@@ -555,13 +672,18 @@ async function adminApi(req, res, ctx) {
     const time = body.time != null ? str(body.time, 5) : b.time;
     const minutes = body.minutes != null ? clampMinutes(body.minutes) : b.minutes;
     if (!isDate(date) || !isTime(time)) return send(res, 400, { error: 'Hibás dátum vagy idő.' });
-    if (ACTIVE[b.status] && overlaps(date, time, minutes, b.id) && !body.force) return send(res, 409, { error: 'Ez az időpont ütközik egy másik foglalással vagy zárással.' });
+    const newPrice = 'price' in body ? parsePrice(body.price) : undefined;
+    if (Number.isNaN(newPrice)) return send(res, 400, { error: 'Hibás ár. Csak számot írj be, pl. 12500.' });
+    const moved = date !== b.date || time !== b.time || minutes !== b.minutes;
+    if (moved && ACTIVE[b.status] && overlaps(date, time, minutes, b.id) && !body.force) return send(res, 409, { error: 'Ez az időpont ütközik egy másik foglalással vagy zárással.' });
     Object.assign(b, { date, time, minutes, updatedAt: new Date().toISOString() });
     if (body.serviceHu != null) b.service = Object.assign({}, b.service, { hu: oneLine(body.serviceHu, 160), local: oneLine(body.serviceHu, 160) });
     if (body.note != null) b.note = str(body.note, 1000);
     if (body.name != null) b.name = oneLine(body.name, 80) || b.name;
     if (body.phone != null) b.phone = oneLine(body.phone, 30);
     if (body.email != null) b.email = oneLine(body.email, 120).toLowerCase();
+    if (newPrice !== undefined) { b.price = newPrice; b.priceAuto = false; }
+    else if ((body.serviceHu != null || body.minutes != null) && (b.priceAuto || b.price === undefined)) autoPrice(b);
     saveDb();
     return send(res, 200, { ok: true, booking: b });
   }
@@ -571,7 +693,7 @@ async function adminApi(req, res, ctx) {
     const b = {
       id: crypto.randomBytes(6).toString('hex'), status: 'confirmed', source: 'manual',
       date: str(body.date, 10), time: str(body.time, 5), minutes: clampMinutes(body.minutes),
-      service: { hu: oneLine(body.serviceHu, 160) || 'Kezelés', local: oneLine(body.serviceHu, 160) || 'Kezelés', category: '' },
+      service: { hu: oneLine(body.serviceHu, 160) || 'Kezelés', local: oneLine(body.serviceHu, 160) || 'Kezelés', category: oneLine(body.category, 80) },
       note: str(body.note, 1000), name: oneLine(body.name, 80), phone: oneLine(body.phone, 30),
       email: oneLine(body.email, 120).toLowerCase(), lang: LANGS.indexOf(body.lang) >= 0 ? body.lang : 'hu',
       createdAt: new Date().toISOString()
@@ -579,6 +701,9 @@ async function adminApi(req, res, ctx) {
     if (!isDate(b.date) || !isTime(b.time)) return send(res, 400, { error: 'Hibás dátum vagy idő.' });
     if (b.name.length < 2) return send(res, 400, { error: 'Add meg a vendég nevét.' });
     if (b.email && !isEmail(b.email)) return send(res, 400, { error: 'Hibás e-mail cím.' });
+    const price = parsePrice(body.price);
+    if (Number.isNaN(price)) return send(res, 400, { error: 'Hibás ár. Csak számot írj be, pl. 12500.' });
+    if (price != null) { b.price = price; b.priceAuto = false; } else autoPrice(b);
     if (overlaps(b.date, b.time, b.minutes) && !body.force) return send(res, 409, { error: 'Ez az időpont ütközik egy másik foglalással vagy zárással.' });
     db.bookings.push(b);
     saveDb();
@@ -764,6 +889,13 @@ function purge() {
   // Personal data is not kept forever: bookings older than a year are removed.
   const cutoff = addDays(now().date, -365);
   const before = db.bookings.length + db.blocks.length;
+  // The revenue statistics keep an anonymous line (day, treatment, price) of every old visit.
+  const old = db.bookings.filter((b) => b.date < cutoff && isDone(b));
+  if (old.length) {
+    fillPrices();
+    old.forEach((b) => archive.items.push({ d: b.date, s: (b.service && b.service.hu) || 'Kezelés', p: b.price == null ? null : b.price, src: b.source === 'manual' ? 'manual' : 'web' }));
+    writeJson(ARCHIVE_FILE, archive);
+  }
   db.bookings = db.bookings.filter((b) => b.date >= cutoff);
   db.blocks = db.blocks.filter((k) => (k.dateTo || k.date) >= cutoff);
   if (db.bookings.length + db.blocks.length !== before) saveDb();

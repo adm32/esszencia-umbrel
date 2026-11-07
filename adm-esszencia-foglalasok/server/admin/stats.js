@@ -18,6 +18,14 @@
   var CLICKS = [['call', 'Hívás gomb'], ['messenger', 'Messenger'], ['email', 'E-mail'], ['map', 'Térkép / útvonal'], ['prices', 'Árlista megnyitva'], ['gallery', 'Galéria képek'], ['lang', 'Nyelvváltás']];
   var nf = new Intl.NumberFormat('hu-HU');
   var n = function (x) { return nf.format(x || 0); };
+  // always group thousands like the price list does ("9 500 Ft", not "9500 Ft")
+  var ft = function (x) { return String(Math.round(x || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0Ft'; };
+  // short money for chart axes: 12 500 → "12,5e", 1 200 000 → "1,2M"
+  var ftShort = function (x) {
+    if (x >= 1e6) return String(Math.round(x / 1e5) / 10).replace('.', ',') + 'M';
+    if (x >= 1000) return String(Math.round(x / 100) / 10).replace('.', ',') + 'e';
+    return String(x);
+  };
 
   function d2(d) { var p = d.split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); }
   function fmt(d, o) { return new Intl.DateTimeFormat('hu-HU', Object.assign({ timeZone: 'UTC' }, o)).format(d2(d)); }
@@ -78,8 +86,8 @@
     return '<ul class="hbars">' + rows.map(function (r) {
       var pct = total ? Math.round(r[1] / total * 100) : 0;
       var w = Math.max(r[1] ? 2 : 0, r[1] / max * 100);
-      return '<li title="' + esc(r[0] + ': ' + n(r[1]) + (opts.noPct ? '' : ' (' + pct + '%)')) + '"><span class="hbars__l">' + esc(r[0]) + '</span>' +
-        '<span class="hbars__v">' + n(r[1]) + (opts.noPct ? '' : ' <small>' + pct + '%</small>') + '</span>' +
+      return '<li title="' + esc(r[0] + ': ' + (opts.fmt || n)(r[1]) + (opts.noPct ? '' : ' (' + pct + '%)')) + '"><span class="hbars__l">' + esc(r[0]) + '</span>' +
+        '<span class="hbars__v">' + (opts.fmt || n)(r[1]) + (opts.noPct ? '' : ' <small>' + pct + '%</small>') + '</span>' +
         '<span class="hbars__t"><i style="width:' + w.toFixed(1) + '%"></i></span></li>';
     }).join('') + '</ul>';
   }
@@ -94,14 +102,16 @@
   }
 
   // group the daily series into weeks / months for longer ranges
-  function buckets() {
-    var s = data.series;
-    if (days <= 31) return s.map(function (x) { return { from: x.d, to: x.d, v: x.visitors, views: x.views }; });
+  function buckets(series, val, extra) {
+    var s = series || data.series;
+    val = val || function (x) { return x.visitors; };
+    extra = extra || function (x) { return x.views || 0; };
+    if (days <= 31) return s.map(function (x) { return { from: x.d, to: x.d, v: val(x), views: extra(x) }; });
     var out = [], cur = null;
-    s.forEach(function (x) {
-      var key = days > 120 ? x.d.slice(0, 7) : Math.floor(s.indexOf(x) / 7);
+    s.forEach(function (x, i) {
+      var key = days > 120 ? x.d.slice(0, 7) : Math.floor(i / 7);
       if (!cur || cur.key !== key) { cur = { key: key, from: x.d, to: x.d, v: 0, views: 0 }; out.push(cur); }
-      cur.to = x.d; cur.v += x.visitors; cur.views += x.views;
+      cur.to = x.d; cur.v += val(x); cur.views += extra(x);
     });
     return out;
   }
@@ -115,23 +125,21 @@
     return fmt(b.from, { month: 'short', day: 'numeric' }) + ' – ' + fmt(b.to, { month: 'short', day: 'numeric' });
   }
 
-  /* column chart of visitors – single series, hover/tap tooltip */
-  function chart() {
-    var box = $('[data-chart]', view);
-    if (!box || !data) return;
-    var bs = buckets();
-    var W = Math.max(280, box.clientWidth), H = 190, L = 30, R = 4, T = 10, B = 24;
+  /* column chart – single series, hover/tap tooltip */
+  function columns(box, bs, o) {
+    if (!box) return;
+    var W = Math.max(280, box.clientWidth), H = 190, L = o.left || 30, R = 4, T = 10, B = 24;
     var max = Math.max.apply(null, bs.map(function (b) { return b.v; }));
-    if (!max) { box.innerHTML = '<p class="chart-empty">Ebben az időszakban még nem volt látogató.</p>'; return; }
+    if (!max) { box.innerHTML = '<p class="chart-empty">' + esc(o.empty) + '</p>'; return; }
     var raw = Math.max(1, max / 4), mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
     var step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
     var top = Math.ceil(max / step) * step;
     var pw = W - L - R, ph = H - T - B, slot = pw / bs.length, gap = Math.max(2, Math.min(8, slot * 0.25)), bw = Math.max(2, slot - gap);
     var y = function (v) { return T + ph - v / top * ph; };
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Látogatók ' + esc(RANGES.filter(function (r) { return r[0] === days; })[0][1]) + ' alatt">';
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="' + esc(o.label) + '">';
     for (var g = 0; g <= top; g += step) {
       svg += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g).toFixed(1) + '" y2="' + y(g).toFixed(1) + '" class="grid' + (g === 0 ? ' grid--base' : '') + '"/>' +
-        '<text x="' + (L - 6) + '" y="' + (y(g) + 4).toFixed(1) + '" class="axis" text-anchor="end">' + g + '</text>';
+        '<text x="' + (L - 6) + '" y="' + (y(g) + 4).toFixed(1) + '" class="axis" text-anchor="end">' + esc((o.axis || String)(g)) + '</text>';
     }
     var minGap = days <= 7 ? 44 : days <= 31 ? 30 : days > 120 ? 40 : 64;
     var every = Math.max(1, Math.ceil(minGap / slot));
@@ -155,7 +163,7 @@
     function show(i) {
       var b = bs[i];
       box.querySelectorAll('.bar').forEach(function (p) { p.classList.toggle('is-dim', +p.getAttribute('data-i') !== i); });
-      tip.innerHTML = '<strong>' + esc(bucketLabel(b, true)) + '</strong><span>' + n(b.v) + ' látogató</span><span class="muted">' + n(b.views) + ' oldalmegnyitás</span>';
+      tip.innerHTML = '<strong>' + esc(bucketLabel(b, true)) + '</strong>' + o.tip(b);
       tip.hidden = false;
       var cx = L + i * slot + slot / 2, tw = tip.offsetWidth;
       tip.style.left = Math.max(0, Math.min(W - tw, cx - tw / 2)) + 'px';
@@ -165,6 +173,60 @@
     svgEl.addEventListener('pointermove', function (e) { var h = e.target.closest('.hit'); if (h) show(+h.getAttribute('data-i')); });
     svgEl.addEventListener('pointerdown', function (e) { var h = e.target.closest('.hit'); if (h) show(+h.getAttribute('data-i')); });
     svgEl.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') hide(); });
+  }
+  var rangeName = function () { return RANGES.filter(function (r) { return r[0] === days; })[0][1]; };
+  function charts() {
+    if (!data) return;
+    columns($('[data-chart]', view), buckets(), {
+      label: 'Látogatók ' + rangeName() + ' alatt', empty: 'Ebben az időszakban még nem volt látogató.',
+      tip: function (b) { return '<span>' + n(b.v) + ' látogató</span><span class="muted">' + n(b.views) + ' oldalmegnyitás</span>'; }
+    });
+    if (data.revenue) columns($('[data-rev-chart]', view), revBuckets(), {
+      label: 'Bevétel ' + rangeName() + ' alatt', empty: 'Ebben az időszakban még nincs lezajlott, árral rendelkező alkalom.', left: 42, axis: ftShort,
+      tip: function (b) { return '<span>' + ft(b.v) + '</span><span class="muted">' + n(b.views) + ' alkalom</span>'; }
+    });
+  }
+  function revBuckets() {
+    return buckets(data.revenue.series, function (x) { return x.v; }, function (x) { return x.n || 0; });
+  }
+
+  /* ---------- revenue (összbevétel) ---------- */
+  function revenueHtml() {
+    var r = data.revenue;
+    if (!r) return '';
+    var avg = r.priced ? r.total / r.priced : 0;
+    var per = days <= 31 ? 'naponta' : days > 120 ? 'havonta' : 'hetente';
+    var miss = r.unpriced ? '<section class="panel panel--warn"><h3>' + n(r.unpriced) + ' alkalomnak nincs ára</h3>' +
+      '<p>Ezek nem számítanak bele a bevételbe (pl. egyedi kezelés, amit nem árazott a lista). Add meg, mennyit fizetett a vendég:</p>' +
+      '<ul class="miss">' + r.missing.map(function (m) {
+        return '<li data-id="' + esc(m.id) + '"><span><b>' + esc(m.name) + '</b> · ' + esc(fmt(m.date, { month: 'short', day: 'numeric' })) + ' ' + esc(m.time) + '<br><small>' + esc(m.service) + '</small></span>' +
+          '<button class="btn btn--line btn--small" type="button" data-act="price">Ár megadása</button></li>';
+      }).join('') + '</ul></section>' : '';
+    var months = r.months.map(function (m) { return [fmt(m.m + '-01', { year: 'numeric', month: 'long' }), m.v, m.n]; });
+    return '<h2 class="stats-h">Bevétel</h2>' +
+      '<div class="kpis">' +
+        kpi('Összbevétel', ft(r.total), delta(r.total, r.prevTotal)) +
+        kpi('Alkalmak', n(r.count), delta(r.count, r.prevCount)) +
+        kpi('Átlag / alkalom', ft(avg), '<small class="kpi__d">' + (r.priced ? n(r.priced) + ' árazott alkalomból' : '&nbsp;') + '</small>') +
+        kpi('Várható', ft(r.upcoming.total), '<small class="kpi__d">' + n(r.upcoming.count) + ' elfogadott jövőbeli időpont' + (r.upcoming.unpriced ? ', ebből ' + n(r.upcoming.unpriced) + ' ár nélkül' : '') + '</small>') +
+      '</div>' + miss +
+      '<section class="panel"><h3>Bevétel ' + per + '</h3><p>Érintsd meg az oszlopot a részletekért.</p>' +
+        '<div class="chart" data-rev-chart></div>' +
+        '<details class="tbl"><summary>Táblázatként</summary><table><thead><tr><th>Időszak</th><th>Bevétel</th><th>Alkalom</th></tr></thead><tbody>' +
+          revBuckets().slice().reverse().map(function (x) { return '<tr><td>' + esc(bucketLabel(x, true)) + '</td><td>' + ft(x.v) + '</td><td>' + n(x.views) + '</td></tr>'; }).join('') +
+        '</tbody></table></details>' +
+      '</section>' +
+      '<div class="grid2">' +
+        '<section class="panel"><h3>Bevétel kezelésenként</h3>' + bars(sorted(r.services, null, 8), { fmt: ft, empty: 'Ebben az időszakban még nincs bevétel.' }) + '</section>' +
+        '<section class="panel"><h3>Honnan jött a foglalás</h3>' + bars([['Weboldalról', r.sources.web], ['Kézi foglalás (telefon, személyesen)', r.sources.manual]], { fmt: ft, empty: 'Ebben az időszakban még nincs bevétel.' }) + '</section>' +
+      '</div>' +
+      '<section class="panel"><h3>Az elmúlt 12 hónap</h3>' +
+        '<p>Összesen eddig: <b>' + ft(r.allTime.total) + '</b> · ' + n(r.allTime.count) + ' alkalom' + (r.allTime.since ? ' (' + esc(fmt(r.allTime.since, { year: 'numeric', month: 'long', day: 'numeric' })) + ' óta)' : '') + '</p>' +
+        '<details class="tbl" open><summary>Havonta</summary><table><thead><tr><th>Hónap</th><th>Bevétel</th><th>Alkalom</th></tr></thead><tbody>' +
+          months.slice().reverse().map(function (m) { return '<tr><td>' + esc(m[0]) + '</td><td>' + ft(m[1]) + '</td><td>' + n(m[2]) + '</td></tr>'; }).join('') +
+        '</tbody></table></details>' +
+      '</section>' +
+      '<p class="stats-note">A bevételbe minden elfogadott és már lezajlott időpont beleszámít – a weboldalról jött és a kézzel felvett foglalások is, a korábbiak is. Az ár a weboldal árlistájából kerül be (sávos árnál az alsó érték, pl. 2 000 – 2 800 Ft → 2 000 Ft), de minden foglalásnál átírható az „Ár módosítása” gombbal. Az egy évnél régebbi foglalások személyes adatai törlődnek, de az összegük (név nélkül) megmarad a statisztikában.</p>';
   }
 
   /* ---------- the page ---------- */
@@ -182,6 +244,8 @@
 
     var html = head + '<p class="stats-period">' + esc(period) + (loading ? ' · frissítés…' : '') + '</p>' +
       (err ? '<p class="err-line">' + esc(err) + '</p>' : '') +
+      revenueHtml() +
+      '<h2 class="stats-h">Weboldal</h2>' +
       '<div class="kpis">' +
         kpi('Látogatók', n(t.visitors), delta(t.visitors, data.prev.visitors)) +
         kpi('Oldalmegnyitás', n(t.views), delta(t.views, data.prev.views)) +
@@ -213,11 +277,11 @@
       '</section>' +
       '<p class="stats-note">Anonim statisztika, sütik nélkül: a weboldal nem ment el semmit a látogatókról, csak napi összesítéseket. Egy látogató naponta egyszer számít, a keresőrobotokat a rendszer kiszűri. Az adatok 400 napig maradnak meg.</p>';
     view.innerHTML = html;
-    chart();
+    charts();
   }
 
   var rt;
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (on && data) chart(); }, 150); });
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (on && data) charts(); }, 150); });
   setInterval(function () { if (on && !document.hidden) reload(); }, 60000);
 
   window.EsszDash = { active: function () { return on; }, reload: reload };

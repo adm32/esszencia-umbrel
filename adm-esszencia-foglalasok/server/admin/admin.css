@@ -153,8 +153,9 @@ body.is-stats .main { padding-top: 18px; }
 .range button { min-height: 42px; border: 0; border-radius: 9px; background: transparent; color: var(--pine); font-weight: 600; font-size: .95rem; }
 .range button[aria-pressed="true"] { background: var(--sheet); box-shadow: 0 1px 3px rgba(34,50,46,.18); }
 .stats-period { margin: 10px 2px 14px; color: var(--moss); font-size: .92rem; }
-.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-@media (min-width: 720px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+@media (min-width: 720px) { .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kpi { min-width: 0; overflow-wrap: anywhere; }
 .kpi { display: flex; flex-direction: column; gap: 2px; padding: 14px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); }
 .kpi__l { font-size: .88rem; color: var(--soft); }
 .kpi__v { font-size: 1.85rem; line-height: 1.15; font-weight: 650; color: var(--pine); font-variant-numeric: tabular-nums; }
@@ -270,3 +271,22 @@ details.tbl th:first-child, details.tbl td:first-child { text-align: left; }
 .dlg__bar { display: flex; justify-content: flex-end; margin: 0 -6px 6px; }
 .dlg__close { min-height: 40px; padding: 0 10px; border: 0; background: none; color: var(--forest); font-weight: 700; font-size: 1.02rem; }
 .dlg--event .card { margin: 0; }
+
+/* prices & revenue */
+.card__price { margin: 6px 0 0; color: var(--soft); font-size: .95rem; }
+.card__price b { color: var(--pine); font-variant-numeric: tabular-nums; }
+.card__noprice { color: var(--warn); }
+.stats-h { margin: 22px 0 10px; color: var(--pine); font-size: 1.25rem; }
+.stats-period + .stats-h { margin-top: 6px; }
+.panel--warn { background: var(--warn-bg); border-color: rgba(138, 90, 18, .3); }
+.panel--warn h3 { color: var(--warn); }
+.miss { margin: 8px 0 0; padding: 0; list-style: none; }
+.miss li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(138, 90, 18, .2); }
+.miss li small { color: var(--soft); }
+.miss .btn { flex: none; }
+@media (max-width: 359px) {
+  .top__in { padding-left: 12px; padding-right: 12px; }
+  .mode-btn { padding: 0 10px 0 8px; font-size: .85rem; }
+  .kpi { padding: 12px; }
+  .kpi__v { font-size: 1.35rem; }
+}

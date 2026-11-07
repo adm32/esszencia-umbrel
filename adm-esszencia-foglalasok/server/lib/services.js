@@ -115,4 +115,47 @@ async function load(opts) {
   return { at: Date.now(), source: 'none', data: { categories: [] } };
 }
 
-module.exports = { load, literalToJson, normalize };
+/** Last good list without waiting for the network (cache → bundled copy). */
+function loadSync(dataDir) {
+  if (mem && mem.data && mem.data.categories.length) return mem.data;
+  for (const file of [path.join(dataDir, 'services-cache.json'), BUNDLED]) {
+    try { return normalize(JSON.parse(fs.readFileSync(file, 'utf8'))); } catch (e) { /* next */ }
+  }
+  return { categories: [] };
+}
+
+/* ---- prices ("10 500 Ft", "7 500 / 9 000 Ft", "2 000 – 2 800 Ft", "Érdeklődj") ---- */
+function parsePrices(s) {
+  return (String(s || '').match(/\d{1,3}(?:[   .]\d{3})+|\d+/g) || [])
+    .map((x) => parseInt(x.replace(/[^\d]/g, ''), 10)).filter((n) => n > 0);
+}
+const key = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+/** Price (Ft) of a treatment from the price list, or null if it isn't listed / has no price.
+    "7 500 / 9 000 Ft" with "45 / 60 perc" picks the price for the booked length,
+    a range ("2 000 – 2 800 Ft") counts with its lower end. */
+function priceFor(list, name, category, minutes) {
+  const n = key(name);
+  if (!n || !list || !list.categories) return null;
+  let hit = null;
+  for (const c of list.categories) {
+    for (const it of c.items) {
+      if (key(it.name) !== n) continue;
+      if (!hit || (category && key(c.name) === key(category))) hit = it;
+    }
+  }
+  if (!hit) return null;
+  const prices = parsePrices(hit.price);
+  if (!prices.length) return null;
+  if (prices.length > 1 && /\//.test(hit.price)) {
+    const durs = (String(hit.duration || '').match(/\d+/g) || []).map(Number);
+    if (durs.length === prices.length && minutes) {
+      let best = 0;
+      durs.forEach((d, i) => { if (Math.abs(d - minutes) < Math.abs(durs[best] - minutes)) best = i; });
+      return prices[best];
+    }
+  }
+  return Math.min.apply(null, prices);
+}
+
+module.exports = { load, loadSync, literalToJson, normalize, parsePrices, priceFor };

@@ -48,6 +48,21 @@
     try { return new Intl.DateTimeFormat('hu-HU', { timeZone: 'Europe/Budapest', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); } catch (e) { return iso; }
   }
   function addDays(d, n) { return new Date(dateObj(d).getTime() + n * 86400000).toISOString().slice(0, 10); }
+  var ft = function (n) { return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0Ft'; };
+  // same rules as the server: "7 500 / 9 000 Ft" + "45 / 60 perc" → price for the length, range → lower end
+  function listPrice(it, minutes) {
+    var ps = (String(it.price || '').match(/\d{1,3}(?:[ \u00a0\u202f.]\d{3})+|\d+/g) || []).map(function (x) { return parseInt(x.replace(/[^\d]/g, ''), 10); }).filter(function (x) { return x > 0; });
+    if (!ps.length) return null;
+    if (ps.length > 1 && /\//.test(it.price)) {
+      var ds = (String(it.duration || '').match(/\d+/g) || []).map(Number);
+      if (ds.length === ps.length && minutes) {
+        var best = 0;
+        ds.forEach(function (d, i) { if (Math.abs(d - minutes) < Math.abs(ds[best] - minutes)) best = i; });
+        return ps[best];
+      }
+    }
+    return Math.min.apply(null, ps);
+  }
   function isPast(b) { return b.date < S.today || (b.date === S.today && toMin(b.time) + b.minutes <= S.nowMin); }
 
   var toastTimer;
@@ -104,6 +119,9 @@
       '<div class="card__who"><strong>' + esc(b.name) + '</strong>' +
       (b.phone ? '<a href="tel:' + esc(b.phone.replace(/[^\d+]/g, '')) + '">' + esc(b.phone) + '</a>' : '') +
       (b.email ? '<a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>' : '') + '</div>' +
+      (st === 'confirmed' || st === 'pending' ? '<p class="card__price">' + (b.price != null
+        ? 'Ár: <b>' + ft(b.price) + '</b>' + (b.priceAuto ? ' <small>(árlista szerint)</small>' : '')
+        : '<span class="card__noprice">Nincs ár megadva</span>') + '</p>' : '') +
       (b.note ? '<p class="card__note">' + esc(b.note) + '</p>' : '') +
       (b.message ? '<p class="card__msg">Üzeneted: ' + esc(b.message) + '</p>' : '') +
       '<div class="card__meta">' + (b.source === 'manual' ? 'Kézi foglalás' : 'Weboldalról') + ' · ' + esc(fmtStamp(b.createdAt)) +
@@ -124,6 +142,7 @@
     } else {
       h += '<button class="btn btn--bad btn--small" type="button" data-act="delete">Törlés</button>';
     }
+    if (st === 'confirmed' || st === 'pending') h += '<button class="btn btn--line btn--small" type="button" data-act="price">' + (b.price != null ? 'Ár módosítása' : 'Ár megadása') + '</button>';
     if (b.mail && !b.mail.ok && b.email && st !== 'pending') h += '<button class="btn btn--line btn--small" type="button" data-act="resend">E-mail újraküldése</button>';
     h += '</div></article>';
     return h;
@@ -400,6 +419,17 @@
       api('/api/admin/bookings/' + id + '/resend', { method: 'POST', body: {} }).then(function (r) { return afterMail(r, 'Újraküldve.'); }).catch(function (e) { toast(e.message, true); });
     } else if (kind === 'move') {
       moveDialog(b);
+    } else if (kind === 'price') {
+      openDialog('Ár', summary(b) +
+        '<label class="field"><span>Mennyit fizetett / fizet a vendég (Ft)</span><input name="price" inputmode="numeric" autocomplete="off" placeholder="Pl. 12500" value="' + (b.price != null ? b.price : '') + '"></label>' +
+        '<p style="color:var(--soft);font-size:.93rem">Ez számít a Statisztika „Bevétel” részébe. Ha üresen hagyod, a foglalás ár nélkül szerepel.</p>',
+        'Mentés', function (fd) {
+          return api('/api/admin/bookings/' + id, { method: 'PUT', body: { price: String(fd.get('price') || '').trim() } }).then(function () {
+            toast('Ár mentve.');
+            if (window.EsszDash && window.EsszDash.active()) window.EsszDash.reload();
+            return load();
+          });
+        });
     }
   }
 
@@ -468,6 +498,8 @@
       '<label class="field" data-svc-wrap><span>Kezelés</span><select name="svc" data-svc><option value="">Kezelések betöltése…</option></select>' +
       '<small>Válassz a weboldal kezelései közül – az időtartam magától beáll. Ha nincs a listában, válaszd az „Egyedi kezelés” sort.</small></label>' +
       '<label class="field" data-svc-custom hidden><span>Egyedi kezelés</span><input name="serviceHu" autocomplete="off" placeholder="Pl. arcmasszázs + szemöldökfestés"></label>' +
+      '<label class="field"><span>Ár (Ft)</span><input name="price" inputmode="numeric" autocomplete="off" placeholder="Pl. 12500" data-price>' +
+      '<small>A weboldal kezelésénél magától kitöltődik, de átírhatod. Ez számít a bevételbe.</small></label>' +
       '<div class="row2"><label class="field"><span>Nap *</span><input type="date" name="date" value="' + (presetDate || S.today) + '" required></label>' +
       '<label class="field"><span>Időtartam</span>' + durSelect('minutes', 60) + '</label></div>' +
       '<div class="field"><span>Szabad kezdési időpontok</span><div class="times" data-times></div></div>' +
@@ -476,7 +508,7 @@
       '<label class="check"><input type="checkbox" name="send"><span>Visszaigazoló e-mail küldése (ha van e-mail cím)</span></label>',
       'Foglalás mentése', function (fd) {
         var pick = svcPicked(fd.get('svc'));
-        var body = { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), serviceHu: pick ? pick.name : fd.get('serviceHu'), date: fd.get('date'), time: fd.get('time'), minutes: +fd.get('minutes'), note: fd.get('note'), sendEmail: !!fd.get('send') };
+        var body = { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), serviceHu: pick ? pick.name : fd.get('serviceHu'), category: pick ? pick.category : '', price: String(fd.get('price') || '').trim(), date: fd.get('date'), time: fd.get('time'), minutes: +fd.get('minutes'), note: fd.get('note'), sendEmail: !!fd.get('send') };
         if (!body.name || body.name.trim().length < 2) return Promise.reject(new Error('Add meg a vendég nevét.'));
         if (fd.get('svc') === 'custom' && !String(fd.get('serviceHu') || '').trim()) return Promise.reject(new Error('Írd be, milyen kezelést kér a vendég (vagy válassz a listából).'));
         if (!body.time) return Promise.reject(new Error('Válassz kezdési időpontot.'));
@@ -500,7 +532,8 @@
   function svcPicked(v) {
     var m = /^(\d+)\.(\d+)$/.exec(v || '');
     if (!m || !SVC || !SVC.categories[+m[1]]) return null;
-    return SVC.categories[+m[1]].items[+m[2]] || null;
+    var c = SVC.categories[+m[1]], it = c.items[+m[2]];
+    return it ? Object.assign({ category: c.name }, it) : null;
   }
   function fillServicePicker(body, refresh) {
     var sel = $('[data-svc]', body), custom = $('[data-svc-custom]', body);
@@ -522,7 +555,18 @@
         $('select[name=minutes]', body).value = String(len);
         refresh();
       }
+      setPrice();
     });
+    // the price follows the picked treatment (and its length, e.g. 45 / 60 perc) until she types her own
+    var priceIn = $('[data-price]', body);
+    if (!priceIn) return;
+    priceIn.addEventListener('input', function () { priceIn.__typed = priceIn.value.trim() !== ''; });
+    function setPrice() {
+      if (priceIn.__typed) return;
+      var it = svcPicked(sel.value), p = it ? listPrice(it, +$('select[name=minutes]', body).value) : null;
+      priceIn.value = p != null ? p : '';
+    }
+    $('select[name=minutes]', body).addEventListener('change', setPrice);
   }
 
   function newBlock(presetDate) {
