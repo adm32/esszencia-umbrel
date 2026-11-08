@@ -4,7 +4,7 @@ name: Esszencia
 tagline: Az Esszencia Szépségműhely weboldala
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/icon.svg
 category: social
-version: "1.5.2"
+version: "1.5.3"
 port: 4751
 description: >-
   Az Esszencia Szépségműhely · Beauty & Relax (Sénye) nyilvános weboldala.
@@ -35,7 +35,7 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-3.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/gallery-4.jpg
 releaseNotes: >-
-  Visszaállítva a Go átírás előtti, jól működő változatra (ugyanaz, mint az 1.4.1 / 1.2.0). A foglalások, beállítások és statisztikák megmaradnak.
+  Az oldal alján a készítő neve mostantól Zala Studio (új logóval), mind a négy nyelven; a link továbbra is az admcore.hu-ra visz.
 dependencies: []
 path: ""
 defaultUsername: ""
