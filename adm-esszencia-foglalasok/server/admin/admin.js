@@ -94,7 +94,7 @@
     badge.textContent = pending.length;
     badge.hidden = !pending.length;
     document.title = (pending.length ? '(' + pending.length + ') ' : '') + 'Esszencia · Foglalások';
-    $('[data-mail-banner]').hidden = S.mailConfigured;
+    $('[data-mail-banner]').hidden = S.mailConfigured || tab !== 'requests'; // only where it matters, not on every tab
     $$('[data-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-tab') === tab)); });
     $$('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== tab; });
     $('[data-fab]').hidden = tab === 'settings';
@@ -163,12 +163,6 @@
       return;
     }
     el.innerHTML = '<p style="color:var(--soft)">' + pending.length + ' kérés vár visszaigazolásra. A vendég csak az elfogadás vagy elutasítás után kap e-mailt.</p>' + pending.map(card).join('');
-  }
-
-  function groupByDay(items) {
-    var map = {};
-    items.forEach(function (it) { (map[it._day] = map[it._day] || []).push(it); });
-    return Object.keys(map).sort().map(function (d) { return { day: d, items: map[d] }; });
   }
 
   /* ---------------- calendar (month grid + day timeline) ---------------- */

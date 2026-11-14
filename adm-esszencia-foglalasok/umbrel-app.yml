@@ -4,7 +4,7 @@ name: Esszencia Foglalások
 tagline: Időpontfoglalások kezelése az Esszencia weboldalhoz
 icon: https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-icon.svg
 category: productivity
-version: "1.3.3"
+version: "2.0.0"
 port: 4752
 description: >-
   Privát kezelőfelület az Esszencia Szépségműhely online időpontfoglalásaihoz.
@@ -38,8 +38,10 @@ gallery:
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-2.jpg
   - https://raw.githubusercontent.com/adm32/esszencia-umbrel/main/assets/foglalasok-3.jpg
 releaseNotes: >-
-  Új: bevétel a Statisztikában – összbevétel, alkalmak, átlag/alkalom, várható bevétel, bevétel naponta/hetente/havonta, kezelésenként, weboldal vs. kézi foglalás és az elmúlt 12 hónap.
-  Minden elfogadott, már lezajlott időpont számít, a kézzel felvettek és a korábbi foglalások is (az ár a weboldal árlistájából kerül be). Minden foglalásnál megadható vagy átírható az ár, új kézi foglalásnál az ár magától kitöltődik.
+  2.0.0 – szebb és gyorsabb kezelőfelület. A naptár a szalon színeit kapta (zöld kijelölés, a mai nap bekarikázva), a kártyák
+  és panelek lágy árnyékot kaptak. Az app fájljai tömörítve érkeznek (kb. harmadakkora letöltés), és ha nem változtak, a telefon
+  nem tölti le őket újra. Az „e-mail küldés nincs beállítva” figyelmeztetés csak a Kérések fülön látszik. Javítás: a túl nagy
+  kérésre a szerver rendes hibaüzenettel válaszol. A nem használt kód kikerült.
 dependencies: []
 path: ""
 defaultUsername: ""

@@ -16,7 +16,7 @@
   <meta property="og:image" content="assets/img/og-image.jpg">
   <meta name="twitter:card" content="summary_large_image">
 
-  <link rel="preload" href="assets/fonts/jost-var.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="assets/fonts/jost-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="preload" as="image" href="assets/img/room-wide-1400.webp" imagesrcset="assets/img/room-wide-800.webp 800w, assets/img/room-wide-1400.webp 1400w, assets/img/room-wide-2000.webp 2000w" imagesizes="(max-width: 900px) 100vw, 52vw">
 
@@ -108,10 +108,10 @@
           <button class="petal-trigger hero__logo" type="button" data-petals aria-label="Esszencia logó – kattints egy kis szirom-esőért">
             <img src="assets/img/logo.webp" width="640" height="625" alt="Esszencia Szépségműhely · Beauty &amp; Relax">
           </button>
-          <h1 id="hero-title"><span class="visually-hidden">Esszencia Szépségműhely, Sénye – </span>Bőrápolás, amit a természet ihletett.</h1>
+          <h1 id="hero-title"><span class="visually-hidden">Esszencia Szépségműhely, Sénye – </span>Bőrápolás, amit a <span class="latin">természet ihletett.</span></h1>
           <p class="lede">Arcbőröket szépítek – és közben a lélek is kisimul. Gyógynövények, illóolajok és természetes, magyar Séance kozmetikumok egy csendes, kertes kis műhelyben.</p>
           <div class="btn-row">
-            <button class="btn" type="button" data-book>Időpontot kérek</button>
+            <button class="btn btn--go" type="button" data-book>Időpontot kérek<svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
             <a class="btn btn--line" href="#kezelesek">Kezelések &amp; árak</a>
           </div>
         </div>
@@ -124,7 +124,7 @@
           </div>
           <figure class="mount hero__inset">
             <span class="tape" aria-hidden="true"></span>
-            <img src="assets/img/sage-700.webp" width="700" height="933" alt="Frissen szedett zsályalevelek">
+            <img src="assets/img/sage-360.webp" srcset="assets/img/sage-360.webp 360w, assets/img/sage-700.webp 700w" sizes="(max-width: 900px) 30vw, 190px" width="360" height="480" alt="Frissen szedett zsályalevelek">
             <figcaption><span>Fig. 01</span><span class="latin">Salvia officinalis</span></figcaption>
           </figure>
           <dl class="info-card" aria-label="Röviden">
@@ -154,8 +154,15 @@
     <!-- ============ SÉANCE RITUAL ============ -->
     <section class="section section--forest has-deco" id="seance" aria-labelledby="ritual-title">
       <svg class="deco deco--br" aria-hidden="true" focusable="false"><use href="#b-chamomile"/></svg>
-      <div class="wrap">
-        <header class="section-head section-head--center">
+      <div class="wrap ritual-grid">
+        <figure class="mount mount--tilt-l ritual__photo">
+          <span class="tape" aria-hidden="true"></span>
+          <img src="assets/img/seance-band-700.webp" srcset="assets/img/seance-band-700.webp 700w, assets/img/seance-band-1200.webp 1200w" sizes="(max-width: 900px) 60vw, 380px"
+               width="700" height="938" loading="lazy" decoding="async" alt="Séance feliratú törölköző és kék üveges kozmetikumok a kezelőágyon">
+          <figcaption><span>Séance-rituálé</span><span class="latin">aroma et cura</span></figcaption>
+        </figure>
+        <div>
+        <header class="section-head">
           <p class="label">A Séance-élmény</p>
           <h2 class="title" id="ritual-title">Egy óra, <span class="latin">csak neked</span></h2>
           <p class="lede">A Séance-kezelések az aromaterápiát és a hatékony bőrápolást ötvözik – kozmetikai eredmény és wellness-élmény egyszerre.</p>
@@ -167,6 +174,7 @@
           <li><span class="ritual__n">iv</span><div><h3>Célzott extrák</h3><p>Szükség esetén kiegészítő ápolás, például a szemkörnyékre vagy pigmentfoltokra.</p></div></li>
           <li><span class="ritual__n">v</span><div><h3>Befejezés</h3><p>Záró krém és személyre szabott tanács az otthoni ápoláshoz.</p></div></li>
         </ol>
+        </div>
       </div>
     </section>
 
@@ -300,7 +308,7 @@
             <p class="label">A műhely</p>
             <h2 class="title" id="gallery-title">Egy kis zöld <span class="latin">menedék</span></h2>
           </div>
-          <p class="gallery-count" aria-hidden="true"><span data-gallery-pos>1</span> / <span data-gallery-total>5</span></p>
+          <p class="gallery-count" aria-hidden="true"><span data-gallery-pos>1</span> / <span data-gallery-total>9</span></p>
         </header>
         <ul class="gallery" data-gallery>
           <li class="g-big"><button type="button" data-full="assets/img/room-love-1400.webp" data-caption="Kezelésre készen"><img src="assets/img/room-love-800.webp" srcset="assets/img/room-love-800.webp 800w, assets/img/room-love-1400.webp 1400w" sizes="(max-width: 760px) 84vw, 50vw" width="800" height="447" loading="lazy" decoding="async" alt="Kezelőágy szemből, mögötte LOVE feliratos polc"></button><p>Kezelésre készen</p></li>
@@ -308,6 +316,10 @@
           <li><button type="button" data-full="assets/img/garden-buddha-1400.webp" data-caption="A kert"><img src="assets/img/garden-buddha-800.webp" width="800" height="537" loading="lazy" decoding="async" alt="Ülő Buddha-szobor a sziklakertben"></button><p>A kert</p></li>
           <li><button type="button" data-full="assets/img/oils-1400.webp" data-caption="Illóolajok"><img src="assets/img/oils-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Illóolajos üvegcsék egy fonott kosár és pálmalevelek előtt"></button><p>Illóolajok</p></li>
           <li><button type="button" data-full="assets/img/bouquet-1400.webp" data-caption="Őszi csokor"><img src="assets/img/bouquet-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Őszi virágcsokor levendulával és piros levelekkel"></button><p>Őszi csokor</p></li>
+          <li><button type="button" data-full="assets/img/room-evening-1200.webp" data-caption="Esti fények"><img src="assets/img/room-evening-700.webp" width="700" height="938" loading="lazy" decoding="async" alt="A kezelőszoba este, meleg lámpafényben"></button><p>Esti fények</p></li>
+          <li><button type="button" data-full="assets/img/bed-towels-1400.webp" data-caption="Puha törölközők"><img src="assets/img/bed-towels-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Kezelőágy összehajtott zöld és fehér törölközőkkel"></button><p>Puha törölközők</p></li>
+          <li><button type="button" data-full="assets/img/lounge-shelf-1200.webp" data-caption="Zöld sarok"><img src="assets/img/lounge-shelf-700.webp" width="700" height="700" loading="lazy" decoding="async" alt="Polc cserepes növényekkel és falióra a pihenősarokban"></button><p>Zöld sarok</p></li>
+          <li><button type="button" data-full="assets/img/products-wide-1400.webp" data-caption="Séance-polc"><img src="assets/img/products-wide-800.webp" width="800" height="597" loading="lazy" decoding="async" alt="Séance kozmetikumok sora a polcon, mögöttük kerek tükör"></button><p>Séance-polc</p></li>
         </ul>
       </div>
     </section>
