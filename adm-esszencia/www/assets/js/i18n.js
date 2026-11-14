@@ -28,7 +28,8 @@ window.ESSZ_I18N = {
 
     /* ---- hero ---- */
     "Esszencia Szépségműhely, Sénye –": ["Esszencia beauty studio, Sénye –", "Esszencia Kosmetikstudio, Sénye –", "Esszencia skönhetsstudio, Sénye –"],
-    "Bőrápolás, amit a természet ihletett.": ["Skincare inspired by nature.", "Hautpflege, inspiriert von der Natur.", "Hudvård inspirerad av naturen."],
+    "Bőrápolás, amit a": ["Skincare inspired by", "Hautpflege, inspiriert von der", "Hudvård inspirerad av"],
+    "természet ihletett.": ["nature.", "Natur.", "naturen."],
     "Arcbőröket szépítek – és közben a lélek is kisimul. Gyógynövények, illóolajok és természetes, magyar Séance kozmetikumok egy csendes, kertes kis műhelyben.": [
       "I care for the skin of your face – and while I do, the soul unwinds too. Herbs, essential oils and natural Hungarian Séance cosmetics in a quiet little studio with a garden.",
       "Ich pflege Ihre Gesichtshaut – und dabei kommt auch die Seele zur Ruhe. Heilkräuter, ätherische Öle und natürliche ungarische Séance-Kosmetik in einem stillen kleinen Studio mit Garten.",
@@ -161,6 +162,16 @@ window.ESSZ_I18N = {
     "A kert": ["The garden", "Der Garten", "Trädgården"],
     "Puha takarók": ["Soft blankets", "Weiche Decken", "Mjuka filtar"],
     "Őszi csokor": ["Autumn bouquet", "Herbststrauß", "Höstbukett"],
+    "Esti fények": ["Evening lights", "Abendlicht", "Kvällsljus"],
+    "Puha törölközők": ["Soft towels", "Weiche Handtücher", "Mjuka handdukar"],
+    "Zöld sarok": ["Green corner", "Grüne Ecke", "Grön hörna"],
+    "Séance-polc": ["The Séance shelf", "Das Séance-Regal", "Séance-hyllan"],
+    "A kezelőszoba este, meleg lámpafényben": ["The treatment room in the evening, in warm lamplight", "Der Behandlungsraum am Abend im warmen Lampenlicht", "Behandlingsrummet på kvällen i varmt lampljus"],
+    "Kezelőágy összehajtott zöld és fehér törölközőkkel": ["Treatment bed with folded green and white towels", "Behandlungsliege mit gefalteten grünen und weißen Handtüchern", "Behandlingsbänk med vikta gröna och vita handdukar"],
+    "Polc cserepes növényekkel és falióra a pihenősarokban": ["Shelf with potted plants and a wall clock in the lounge corner", "Regal mit Topfpflanzen und Wanduhr in der Ruheecke", "Hylla med krukväxter och en väggklocka i vilohörnan"],
+    "Séance kozmetikumok sora a polcon, mögöttük kerek tükör": ["A row of Séance cosmetics on the shelf with a round mirror behind", "Séance-Kosmetik in einer Reihe auf dem Regal, dahinter ein runder Spiegel", "En rad Séance-produkter på hyllan med en rund spegel bakom"],
+    "Séance-rituálé": ["The Séance ritual", "Das Séance-Ritual", "Séance-ritualen"],
+    "Séance feliratú törölköző és kék üveges kozmetikumok a kezelőágyon": ["A towel embroidered with Séance and blue glass bottles on the treatment bed", "Ein Handtuch mit Séance-Schriftzug und blaue Glasflaschen auf der Behandlungsliege", "En handduk med texten Séance och blå glasflaskor på behandlingsbänken"],
     "Séance termékek": ["Séance products", "Séance-Produkte", "Séance-produkter"],
     "Kezelőágy szemből, mögötte LOVE feliratos polc": ["Treatment bed from the front, with a LOVE sign on the shelf behind", "Behandlungsliege von vorn, dahinter ein Regal mit LOVE-Schriftzug", "Behandlingsbrits framifrån, bakom en hylla med LOVE-skylt"],
     "Pihenősarok bárányszőrös paddal, mintás párnákkal és zöld asztallal": ["Lounge corner with a sheepskin bench, patterned cushions and a green table", "Ruheecke mit Lammfellbank, gemusterten Kissen und grünem Tisch", "Vilohörna med fårskinnsbänk, mönstrade kuddar och ett grönt bord"],

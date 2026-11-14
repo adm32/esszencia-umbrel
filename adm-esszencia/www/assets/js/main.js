@@ -345,14 +345,28 @@
     moreLabels.push(setLabel);
   });
 
-  /* ---------- Phone gallery counter (1 / 5) ---------- */
+  /* ---------- Gentle rise as blocks scroll into view (CSS: .js .rv) ---------- */
+  if (hasIO && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    var rise = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("is-in"); rise.unobserve(en.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    $$(".section-head, .section .mount, .quote, .season-card, .ritual li, .autumn, .product-list, .plates, .gallery, .contact-lines, [data-services-root]").forEach(function (el) {
+      if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: leave it alone
+      el.classList.add("rv");
+      rise.observe(el);
+    });
+  }
+
+  /* ---------- Phone gallery counter (1 / 9) ---------- */
   var galleryList = $("[data-gallery]"), gPos = $("[data-gallery-pos]"), gTotal = $("[data-gallery-total]");
   if (galleryList && gPos) {
     var slides = $$("li", galleryList);
     if (gTotal) gTotal.textContent = slides.length;
     galleryList.addEventListener("scroll", function () {
-      var left = galleryList.scrollLeft, best = 0, bestD = Infinity;
-      slides.forEach(function (li, i) { var d = Math.abs(li.offsetLeft - galleryList.offsetLeft - left - parseFloat(getComputedStyle(galleryList).paddingLeft || 0)); if (d < bestD) { bestD = d; best = i; } });
+      var start = galleryList.scrollLeft + galleryList.offsetLeft + (parseFloat(getComputedStyle(galleryList).paddingLeft) || 0), best = 0, bestD = Infinity;
+      slides.forEach(function (li, i) { var d = Math.abs(li.offsetLeft - start); if (d < bestD) { bestD = d; best = i; } });
       gPos.textContent = best + 1;
     }, { passive: true });
   }
