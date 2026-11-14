@@ -18,6 +18,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const mail = require('./lib/mail');
 const tpl = require('./lib/templates');
 const servicesList = require('./lib/services');
@@ -252,10 +253,20 @@ function send(res, status, obj, headers) {
 }
 function readBody(req, limit) {
   return new Promise((resolve, reject) => {
-    let size = 0;
+    let size = 0, refused = false;
     const chunks = [];
-    req.on('data', (c) => { size += c.length; if (size > limit) { reject(Object.assign(new Error('too large'), { status: 413 })); req.destroy(); } else chunks.push(c); });
+    // Too large: stop collecting so the handler can answer 413, then hang up on whatever is still coming in.
+    req.on('data', (c) => {
+      if (refused) return;
+      size += c.length;
+      if (size <= limit) return chunks.push(c);
+      refused = true;
+      chunks.length = 0;
+      reject(Object.assign(new Error('too large'), { status: 413 }));
+      setTimeout(() => req.destroy(), 1000).unref();
+    });
     req.on('end', () => {
+      if (refused) return;
       if (!chunks.length) return resolve({});
       try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); } catch (e) { reject(Object.assign(new Error('bad json'), { status: 400 })); }
     });
@@ -539,22 +550,38 @@ function revenueReport(days) {
 /* ============================================================= ADMIN API */
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon' };
 
-function serveStatic(req, res, p) {
-  const rel = p === '/' ? 'index.html' : p.replace(/^\/+/, '');
-  const file = path.normalize(path.join(ADMIN_DIR, rel));
-  if (!file.startsWith(ADMIN_DIR)) { res.writeHead(403); return res.end(); }
-  fs.readFile(file, (err, data) => {
-    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
-    res.writeHead(200, {
-      'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer',
-      'X-Frame-Options': 'SAMEORIGIN',
-      'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
-    });
-    res.end(data);
+// The admin app's files are read once at start (the folder is read-only and replaced on update),
+// gzipped once, and answered with an ETag so an unchanged file costs a tiny 304.
+const STATIC = new Map();
+for (const name of fs.readdirSync(ADMIN_DIR)) {
+  const ext = path.extname(name);
+  if (!MIME[ext]) continue;
+  const data = fs.readFileSync(path.join(ADMIN_DIR, name));
+  STATIC.set(name, {
+    type: MIME[ext], data,
+    gzip: /^\.(html|css|js|svg|webmanifest)$/.test(ext) ? zlib.gzipSync(data, { level: 9 }) : null,
+    etag: '"' + crypto.createHash('sha1').update(data).digest('base64url').slice(0, 16) + '"'
   });
+}
+const STATIC_HEADERS = {
+  'Cache-Control': 'no-cache',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+};
+
+function serveStatic(req, res, p) {
+  const f = STATIC.get(p === '/' ? 'index.html' : p.replace(/^\/+/, ''));
+  if (!f) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+  const headers = Object.assign({ 'Content-Type': f.type, ETag: f.etag, Vary: 'Accept-Encoding' }, STATIC_HEADERS);
+  if (req.headers['if-none-match'] === f.etag) { res.writeHead(304, headers); return res.end(); }
+  const gz = f.gzip && /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
+  if (gz) headers['Content-Encoding'] = 'gzip';
+  const body = gz ? f.gzip : f.data;
+  headers['Content-Length'] = body.length;
+  res.writeHead(200, headers);
+  res.end(req.method === 'HEAD' ? undefined : body);
 }
 
 function settingsForClient() {
