@@ -1,3 +1,4 @@
+/* Esszencia · Foglalások – login page on the remote address (own password). */
 (function () {
   'use strict';
   var f = document.querySelector('[data-login]');
