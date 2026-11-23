@@ -16,8 +16,9 @@ and scripts are all local, so nothing is loaded from Google or any other third p
 The site runs on port **4751** (`http://umbrel.local:4751`). It is a public website,
 so Umbrel's login screen is switched off for it (`PROXY_AUTH_ADD: "false"`).
 
-To put it on a real domain, point a Cloudflare Tunnel public hostname at
-`http://<umbrel-ip>:4751`.
+To put it on a real domain, point a Cloudflare Tunnel public hostname at Tükör's
+proxy for the app, `http://host.docker.internal:14751` (app port + 10000), never at
+port 4751 directly. Tükör passes the request to whichever Umbrel is serving.
 
 ## Online booking & statistics (second app)
 
@@ -52,8 +53,8 @@ point at port 4752. Instead:
 
 1. Open the app on the Umbrel (port 4752) → **Beállítások → Távoli elérés**, and set
    a password (at least 10 characters). Until then the remote port stays locked.
-2. In the Cloudflare tunnel, point the hostname at port **4754** (same host as the
-   website's route, only the port differs).
+2. In the Cloudflare tunnel, point the hostname at Tükör's proxy for the remote
+   port, `http://host.docker.internal:14754` (4754 + 10000), like the website's route.
 3. Optionally set **Beállítások → Linkek** to the new address, so the button in the
    notification e-mails opens it.
 
